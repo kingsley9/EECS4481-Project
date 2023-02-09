@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="design.css">
+  <title>Anonymous User</title>
+</head>
+<body>
+  <div class="header">
+    <h1 class="header__title">Telegram</h1>
+  </div>
+  <div class="main">
+    <div class="main__session" id="session-area" style="display: none">
+      <h2 class="main__session-title">Session Area</h2>
+      <div class="main__session-form">
+        <input type="text" id="recipient" placeholder="Enter recipient">
+        <textarea id="message" placeholder="Enter message"></textarea>
+        <button id="send-message-button">Send Message</button>
+      </div>
+      <h2 class="main__session-title">Sent Messages</h2>
+      <ul id="sent-messages"></ul>
+    </div>
+    <div class="main__create-session" id="create-session-area">
+      <h2 class="main__create-session-title">Create Session</h2>
+      <button id="create-session-button">Create Session</button>
+    </div>
+  </div>
+  <script src="anonymous-user.js"></script>
+</body>
+</html>
