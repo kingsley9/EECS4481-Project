@@ -1,7 +1,24 @@
 # Help Desk App Server
 
-
 # Dev Setup
+## Repository Initial Setup
+1. Create personal access token (with "repo" access): https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
+2. Clone repository: `git clone https://github.com/kingsley9/EECS4481-Project-T5.git`. First time, it'll ask for your username and password (put personal access token here). s
+3. Setup Git configs:
+```
+git config --global user.name "Your Name"
+git config --global user.email "email@gmail.com"
+```
+
+## Git Flow for changes
+1. Run `git pull` on regular basis to the get updated code from Github.
+2. When working on changes create a separate branch: `git checkout -b new-feature`
+3. Once done with all the changes add all files: `git add *`
+4. Add your commit message: `git commit -m "feat: added a new feature"`
+5. Push all changes to github: `git push origin head`
+6. Go to Github page "https://github.com/kingsley9/EECS4481-Project-T5"
+7. You should be able to open PR to merge those changes to main branch. This way we can review PR before changes are commited, if needed.
+
 ## Windows
 1. Install WSL: https://www.windowscentral.com/how-install-wsl2-windows-10
 2. Install Node and NPM. Run the following commands in the linux (WSL) terminal:
