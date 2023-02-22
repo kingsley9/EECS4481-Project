@@ -14,10 +14,6 @@ node_modules
 # TS
 *.tsbuildinfo
 
-# SOPS decrypted secrets
-*.sd.yaml
-*.duplicated.yaml
-
 # Logs
 jmeter.log
 
@@ -25,7 +21,6 @@ jmeter.log
 */**/*.egg-info
 */**/__pycache__/
 */**/*credentials.*
-credit-risk/*/**/resources/
 .cache
 .vscode/*.log
 .make.*
