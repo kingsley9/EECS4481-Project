@@ -23,6 +23,21 @@ const pool = new Pool({
 
 const sessions = new Map();
 
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  pool.query('SELECT * FROM admins WHERE username = $1 AND password = $2', [username, password], (error, results) => {
+    if (error) {
+      console.error(error);
+      res.status(500).send('Internal server error');
+    } else if (results.rows.length > 0) {
+      res.status(200).send('Login successful');
+    } else {
+      res.status(401).send('Invalid username or password');
+    }
+  });
+});
+
 const auth = (req, res, next) => {
   const user = basicAuth(req);
   if (!user || user.name !== 'admin' || user.pass !== 'password') {
@@ -60,7 +75,7 @@ app.post('/message', async (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/messages', auth, async (req, res) => {
+app.get('/admin/messages', auth, async (req, res) => {
   const { sessionId } = req.query;
   const { rows } = await pool.query(
     'SELECT receiver, message FROM messages WHERE session_id = $1',
@@ -68,6 +83,7 @@ app.get('/messages', auth, async (req, res) => {
   );
   res.send(rows);
 });
+
 // Routes
 app.get('/', function (req, res) {
   res.sendFile(
