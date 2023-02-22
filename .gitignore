@@ -1,0 +1,31 @@
+# put common ignore here
+.DS_Store
+.idea
+build.env
+.devcontainer/.env
+
+# local storage mounts should be ignored
+.local-deps/
+
+# Lerna
+lerna-debug.log
+node_modules
+
+# TS
+*.tsbuildinfo
+
+# SOPS decrypted secrets
+*.sd.yaml
+*.duplicated.yaml
+
+# Logs
+jmeter.log
+
+.python-version
+*/**/*.egg-info
+*/**/__pycache__/
+*/**/*credentials.*
+credit-risk/*/**/resources/
+.cache
+.vscode/*.log
+.make.*
