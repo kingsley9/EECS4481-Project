@@ -5,10 +5,13 @@ const uuid = require('uuid');
 const basicAuth = require('basic-auth');
 const { Pool } = require('pg');
 const cors = require('cors');
+const path = require('path');
 
-app.use(cors({
-    origin: '*'
-}));
+app.use(
+  cors({
+    origin: '*',
+  })
+);
 
 const pool = new Pool({
   user: 'dbadmin',
@@ -64,6 +67,12 @@ app.get('/messages', auth, async (req, res) => {
     [sessionId]
   );
   res.send(rows);
+});
+// Routes
+app.get('/', function (req, res) {
+  res.sendFile(
+    path.join(__dirname, '..', 'client-app/anonymous', 'index.html')
+  );
 });
 
 app.listen(8080);
