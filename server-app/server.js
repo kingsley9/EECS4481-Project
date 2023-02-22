@@ -91,4 +91,11 @@ app.get('/', function (req, res) {
   );
 });
 
+// Routes
+app.get('/test', function (req, res) {
+  res.sendFile(
+    path.join(__dirname, '..', 'client-app/anonymous', 'index.html')
+  );
+});
+
 app.listen(8080);
