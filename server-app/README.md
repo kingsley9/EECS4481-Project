@@ -9,17 +9,13 @@
 git config --global user.name "Your Name"
 git config --global user.email "email@gmail.com"
 ```
+## Setup VSCode
+1. Run Ctrl+Shift+P
+2. Search for 'Clone Repository'
+3. Put the repository URL: https://github.com/kingsley9/EECS4481-Project-T5.git
+4. Login to Github and authorize VSCode Access.
 
-## Git Flow for changes
-1. Run `git pull` on regular basis to the get updated code from Github.
-2. When working on changes create a separate branch: `git checkout -b new-feature`
-3. Once done with all the changes add all files: `git add *`
-4. Add your commit message: `git commit -m "feat: added a new feature"`
-5. Push all changes to github: `git push origin head`
-6. Go to Github page "https://github.com/kingsley9/EECS4481-Project-T5"
-7. You should be able to open PR to merge those changes to main branch. This way we can review PR before changes are commited, if needed.
-
-## Windows
+## Initial Windows Setup
 1. Install WSL: https://www.windowscentral.com/how-install-wsl2-windows-10
 2. Install Node and NPM. Run the following commands in the linux (WSL) terminal:
 ```
@@ -47,3 +43,12 @@ nvm use
 3. Install list of required dependencies: `npm i`
 4. Run the server: `npm start`
 
+
+## Git Flow for changes
+1. Run `git pull` on regular basis to the get updated code from Github.
+2. When working on changes create a separate branch: `git checkout -b new-feature`
+3. Once done with all the changes add all files: `git add *`
+4. Add your commit message: `git commit -m "feat: added a new feature"`
+5. Push all changes to github: `git push origin head`
+6. Go to Github page "https://github.com/kingsley9/EECS4481-Project-T5"
+7. You should be able to open PR to merge those changes to main branch. This way we can review PR before changes are commited, if needed.
