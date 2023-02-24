@@ -1,0 +1,22 @@
+.dashboard {
+  width: 50rem;
+  margin: 0 auto;
+  padding: 20px;
+  color: #000;
+  border-radius: 10px; /* Added border radius */
+}
+
+
+.chat-area {
+  width: 60rem;
+  border: 1px solid #bfbfbf;
+  background-color: white;
+  padding: 25px;
+  height: 37rem;
+  overflow-y: auto;
+  margin-top: 20px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Align items to the bottom */
+}

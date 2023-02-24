@@ -9,6 +9,7 @@ interface Props {
 }
 
 const ChatBox: React.FC<Props> = (props) => {
+  const today: Date = new Date();
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
@@ -27,7 +28,7 @@ const ChatBox: React.FC<Props> = (props) => {
 
   return (
     <div>
-      <Messages messages={messages} />
+      <Messages messages={messages} currentUser={''} />
       <ChatInput onSend={handleSend} />
     </div>
   );
