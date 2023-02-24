@@ -49,18 +49,15 @@ app.post('/api/admin/login', (req, res) => {
 
 const auth = (req, res, next) => {
   const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
-  console.log(token);
   if (!token) {
     return res.status(401).send('Unauthorized request');
   }
   jwt.verify(token, secret, (err, decoded) => {
     if (err) {
-      console.log('here 1');
       return res.status(401).send('Unauthorized request');
     }
 
     if (decoded.role !== 'admin') {
-      console.log('here 2');
       return res.status(403).send('Forbidden');
     }
 
