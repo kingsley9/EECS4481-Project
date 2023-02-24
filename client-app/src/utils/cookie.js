@@ -1,11 +1,10 @@
 import Cookies from 'js-cookie';
 
-export const setCookie = (name, value, options = {}) => {
+export const setCookie = (name, value) => {
   Cookies.set(name, value, {
-    secure: true,
-    httpOnly: true,
+    secure: false,
+    httpOnly: false,
     sameSite: 'strict',
-    ...options,
   });
 };
 
