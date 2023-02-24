@@ -23,7 +23,7 @@ const pool = new Pool({
 
 const sessions = new Map();
 
-app.post('/login', (req, res) => {
+app.post('/admin/login', (req, res) => {
   const { username, password } = req.body;
 
   pool.query('SELECT * FROM admins WHERE username = $1 AND password = $2', [username, password], (error, results) => {
@@ -50,19 +50,19 @@ const auth = (req, res, next) => {
 
 app.use(bodyParser.json());
 
-app.post('/session', async (req, res) => {
+app.post('/api/session', async (req, res) => {
   const id = uuid.v4();
   sessions.set(id, {});
   await pool.query('INSERT INTO sessions (id) VALUES ($1)', [id]);
   res.send({ sessionId: id });
 });
 
-app.get('/sessions', auth, async (req, res) => {
+app.get('/api/sessions', auth, async (req, res) => {
   const { rows } = await pool.query('SELECT id FROM sessions');
   res.send(rows.map(({ id }) => ({ id })));
 });
 
-app.post('/message', async (req, res) => {
+app.post('/api/message', async (req, res) => {
   const { recipient, message, sessionId } = req.body;
   if (!sessions.has(sessionId)) {
     res.sendStatus(404);
@@ -75,7 +75,7 @@ app.post('/message', async (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/admin/messages', auth, async (req, res) => {
+app.get('/api/admin/messages', auth, async (req, res) => {
   const { sessionId } = req.query;
   const { rows } = await pool.query(
     'SELECT receiver, message FROM messages WHERE session_id = $1',
@@ -86,13 +86,6 @@ app.get('/admin/messages', auth, async (req, res) => {
 
 // Routes
 app.get('/', function (req, res) {
-  res.sendFile(
-    path.join(__dirname, '..', 'client-app/anonymous', 'index.html')
-  );
-});
-
-// Routes
-app.get('/test', function (req, res) {
   res.sendFile(
     path.join(__dirname, '..', 'client-app/anonymous', 'index.html')
   );
