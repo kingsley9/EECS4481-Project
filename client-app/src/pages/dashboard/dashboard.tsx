@@ -15,12 +15,11 @@ const Dashboard = () => {
   }, [navigate, sessionId]);
 
   return (
-    <div style={{ margin: 'auto' }}>
+    <div className="dashboard">
       <h1>Dashboard</h1>
       <p>Welcome to the Dashboard!</p>
-      <div className="chat-area">
-        <ChatBox sessionId={sessionId} />
-      </div>
+
+      <ChatBox sessionId={sessionId} />
     </div>
   );
 };

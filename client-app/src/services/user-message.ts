@@ -11,8 +11,8 @@ export const getMessages = async (sessionId: string) => {
   return response.data;
 };
 
-export const sendMessage = async (message: string, sessionId: string) => {
-  const response = await axios.post(`${API_URL}/api/user/message`, {message}, {
+export const sendMessage = async (message: string, sessionId: string, token = '') => {
+  const response = await axios.post(`${API_URL}/api/user/message`, {message, token}, {
     headers: {
       'Content-Type': 'application/json',
       'SessionId': `${sessionId}`,

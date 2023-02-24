@@ -1,5 +1,6 @@
 form {
-  margin-top: auto; /* Push form to the bottom */
+  margin-top: auto;
+
 }
 form textarea {
   width: 85%;
@@ -11,29 +12,34 @@ form textarea {
   resize: none;
   background-color:#f4f4f4 ;
   margin-top: auto;
-  
+   border-radius: 5px; /* Added border radius */
 }
 form button {
-height: 40px;
-  font-size: 1.2rem;
-  background-color: #007bff;
+  max-width: 4rem;
+  width: 11%;
+  font-weight: bold;
+  font-size: 1rem;
+  background-color: #008CBA;
   color: #fff;
   border: none;
-  padding: 10px 20px;
+  padding: 7px 12px;
   cursor: pointer;
   margin-top:auto;
   margin-left: auto; /* Moved the send button to the right */
   display: block;
-  border-radius: 5px; /* Added border radius */
+  border-radius: 10px; /* Added border radius */
   transition: background-color 0.2s ease-in-out; /* Added transition effect */
 }
 button:hover {
-  background-color: #0056b3; /* Added hover effect */
+  background-color: #64a0b3; /* Added hover effect */
 }
 
 .message-bar{
     display:flex;
-    
+    width: 100%;
+    justify-content: space-evenly;
+      /* border: 1px solid red; */
+
     /* height: 80%; */
     /* border: 2px solid red; */
 }

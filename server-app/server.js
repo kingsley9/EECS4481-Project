@@ -7,6 +7,7 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const jwt_decode = require('jwt-decode');
 
 app.use(
   cors({
@@ -41,7 +42,7 @@ app.post('/api/admin/login', (req, res) => {
         console.error(error);
         res.status(500).send('Internal server error');
       } else if (results.rows.length > 0) {
-        const admin = { username: username, role: 'admin' };
+        const admin = { username: username, adminId: results.rows[0].adminid, role: 'admin' };
         const token = jwt.sign(admin, secret, { expiresIn: '1h' });
         res.status(200).send({ token });
       } else {
@@ -79,6 +80,18 @@ app.get('/api/admin', auth, (req, res) => {
   res.status(200).send({message: `Welcome ${req.admin}`});
 });
 
+app.get('/api/admin/sessions', auth, async (req, res) => {
+  const token =
+    req.headers.authorization && req.headers.authorization.split(' ')[1];
+  const decoded = jwt_decode(token);
+  const adminId = decoded.adminId;
+  const { rows } = await pool.query(
+    'SELECT id FROM sessions WHERE adminid = $1',
+    [adminId]
+  );
+  res.send(rows);
+});
+
 app.post('/api/session', async (req, res) => {
   const id = uuid.v4();
   const { rows } = await pool.query('SELECT adminid FROM admins ORDER BY RANDOM() LIMIT 1');
@@ -90,26 +103,44 @@ app.post('/api/session', async (req, res) => {
 
 app.post('/api/user/message', async (req, res) => {
   const sessionId = req.headers.sessionid;
-  const { message } = req.body;
+  const { message, token } = req.body;
+  let userType = 'user';
+  if (token != '') {
+    jwt.verify(token, secret, (err, decoded) => {
+      if (err) {
+        return res.status(401).send('Unauthorized request');
+      }
+  
+      if (decoded.role !== 'admin') {
+        return res.status(403).send('Forbidden');
+      }
+  
+      userType = decoded.role;
+      
+    });
+  }
+  
   await pool.query(
     'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
-    ['user', message, sessionId]
+    [userType, message, sessionId]
   );
   res.sendStatus(200);
 });
 
 app.get('/api/messages', async (req, res) => {
   const sessionId = req.headers.sessionid;
-  const { rows } = await pool.query(
-    'SELECT id, sender, message, created_at FROM user_messages WHERE session = $1',
-    [sessionId]
-  );
-  res.send(rows);
+  if (sessionId != '') {
+    const { rows } = await pool.query(
+      'SELECT id, sender, message, created_at FROM user_messages WHERE session = $1',
+      [sessionId]
+    );
+    res.send(rows);
+  }
 });
 
 app.post('/api/admin/message', auth, async (req, res) => {
   const sessionId = req.headers.sessionid;
-  const { message } = req.body;
+  const { message, token } = req.body;
   await pool.query(
     'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
     ['admin', message, sessionId]
