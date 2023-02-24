@@ -87,26 +87,22 @@ app.post('/api/session', async (req, res) => {
 });
 
 app.post('/api/user/message', async (req, res) => {
-  const { content, sender, timestamp } = req.body;
+  const { message, sessionId } = req.body;
   if (!sessions.has(sessionId)) {
     res.sendStatus(404);
     return;
   }
-  const { recipient } = await pool.query(
-    'SELECT sender, message FROM messages WHERE session_id = $1',
-    [sessionId]
-  );
   await pool.query(
-    'INSERT INTO messages (receiver, message, session_id) VALUES ($1, $2, $3)',
-    [recipient, message, sessionId]
+    'INSERT INTO messages (sender, message, session) VALUES ($1, $2, $3)',
+    ['user', message, sessionId]
   );
   res.sendStatus(200);
 });
 
 app.get('/api/user/messages', auth, async (req, res) => {
-  const { sessionId } = req.query;
+  const sessionId = req.query.sessionId;
   const { rows } = await pool.query(
-    'SELECT receiver, message FROM messages WHERE session_id = $1',
+    'SELECT sender, message, created_at FROM user_messages WHERE session = $1',
     [sessionId]
   );
   res.send(rows);
