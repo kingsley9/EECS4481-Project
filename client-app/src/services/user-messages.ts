@@ -17,6 +17,7 @@ export const sendMessage = async (message: Message, sessionId: any) => {
 };
 
 export interface Message {
+  id: number;
   content: string;
   sender: string;
   timestamp: Date;

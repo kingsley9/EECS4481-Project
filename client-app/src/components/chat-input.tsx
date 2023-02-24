@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './chat-input.css';
 
 interface Props {
   onSend: (text: string) => void;
@@ -7,7 +8,7 @@ interface Props {
 const ChatInput: React.FC<Props> = ({ onSend }) => {
   const [text, setText] = useState('');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
   };
 
@@ -21,8 +22,10 @@ const ChatInput: React.FC<Props> = ({ onSend }) => {
 
   return (
     <form onSubmit={handleFormSubmit}>
-      <input type="text" value={text} onChange={handleInputChange} />
-      <button type="submit">Send</button>
+      <div className="message-bar">
+        <textarea value={text} onChange={handleInputChange} />
+        <button type="submit">Send</button>
+      </div>
     </form>
   );
 };
