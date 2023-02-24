@@ -6,19 +6,19 @@ import ChatBox from '../../components/chat-box';
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const sessionCookie = getCookie('session');
+  const sessionId = getCookie('session') ?? '';
 
-    if (!sessionCookie) {
+  useEffect(() => {
+    if (!sessionId || sessionId === '') {
       navigate('/');
     }
-  }, [navigate]);
+  }, [navigate, sessionId]);
 
   return (
     <div>
       <h1>Dashboard</h1>
       <p>Welcome to the Dashboard!</p>
-      <ChatBox />
+      <ChatBox sessionId={sessionId} />
     </div>
   );
 };

@@ -13,7 +13,7 @@ app.use(
     origin: 'http://localhost:3000',
     credentials: true,
     methods: ['GET','POST'],
-    allowedHeaders: ['Authorization', 'Content-Type'],
+    allowedHeaders: ['Authorization', 'Content-Type', 'SessionId'],
   })
 );
 
@@ -84,25 +84,32 @@ app.post('/api/session', async (req, res) => {
 });
 
 app.post('/api/user/message', async (req, res) => {
-  const { message, sessionId } = req.body;
-  if (!sessions.has(sessionId)) {
-    res.sendStatus(404);
-    return;
-  }
+  const sessionId = req.headers.sessionid;
+  const { message } = req.body;
   await pool.query(
-    'INSERT INTO messages (sender, message, session) VALUES ($1, $2, $3)',
+    'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
     ['user', message, sessionId]
   );
   res.sendStatus(200);
 });
 
-app.get('/api/user/messages', auth, async (req, res) => {
-  const sessionId = req.query.sessionId;
+app.get('/api/messages', async (req, res) => {
+  const sessionId = req.headers.sessionid;
   const { rows } = await pool.query(
     'SELECT sender, message, created_at FROM user_messages WHERE session = $1',
     [sessionId]
   );
   res.send(rows);
+});
+
+app.post('/api/admin/message', auth, async (req, res) => {
+  const sessionId = req.headers.sessionid;
+  const { message } = req.body;
+  await pool.query(
+    'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
+    ['admin', message, sessionId]
+  );
+  res.sendStatus(200);
 });
 
 // Routes

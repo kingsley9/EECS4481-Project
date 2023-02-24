@@ -12,7 +12,6 @@ const Messages: React.FC<Props> = ({ messages }) => {
         <div>
           <span>{message.sender}: </span>
           <span>{message.message}</span>
-          <span>{message.timestamp.toISOString()}</span>
         </div>
       ))}
     </div>
