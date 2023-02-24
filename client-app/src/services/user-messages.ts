@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL } from '../utils/constants';
+import { API_URL } from '../config/default';
 import { getCookie } from '../utils/cookie';
 
 export const getMessages = async (sessionId: any) => {
