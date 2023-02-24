@@ -3,7 +3,7 @@ import Messages from './messages';
 import ChatInput from './chat-input';
 import { Message } from '../data/message';
 import { getMessages, sendMessage } from '../services/user-message';
-
+import './chat-box.css';
 interface Props {
   sessionId: string;
 }
@@ -27,9 +27,11 @@ const ChatBox: React.FC<Props> = (props) => {
   };
 
   return (
-    <div>
-      <Messages messages={messages} currentUser={''} />
-      <ChatInput onSend={handleSend} />
+    <div className="chat-area">
+      <div>
+        <Messages messages={messages} currentUser={''} />
+        <ChatInput onSend={handleSend} />
+      </div>
     </div>
   );
 };
