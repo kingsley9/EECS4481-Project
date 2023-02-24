@@ -7,13 +7,11 @@ interface DecodedToken {
   exp: number;
 }
 
-export const verifyToken = (): boolean => {
-  const token = getCookie('token');
-  if (!token) return false;
+export const verifyToken = (token = ''): boolean => {
+  if (token == '') return false;
 
   try {
     const decoded = jwt_decode<DecodedToken>(token);
-    console.log(decoded);
     if (decoded.exp * 1000 > Date.now()) {
       return true;
     } else {

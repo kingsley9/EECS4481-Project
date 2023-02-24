@@ -11,6 +11,9 @@ const jwt = require('jsonwebtoken');
 app.use(
   cors({
     origin: 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET','POST'],
+    allowedHeaders: ['Authorization'],
   })
 );
 
@@ -55,7 +58,7 @@ const auth = (req, res, next) => {
       return res.status(401).send('Unauthorized request');
     }
 
-    if (decoded.admin !== 'admin') {
+    if (decoded.role !== 'admin') {
       return res.status(403).send('Forbidden');
     }
 
@@ -65,13 +68,15 @@ const auth = (req, res, next) => {
 };
 
 app.get('/api/admin', auth, (req, res) => {
-  res.status(200).send(`Welcome ${req.admin}`);
+  res.status(200).send({message: `Welcome ${req.admin}`});
 });
 
 app.post('/api/session', async (req, res) => {
   const id = uuid.v4();
-  sessions.set(id, {});
-  await pool.query('INSERT INTO sessions (id) VALUES ($1)', [id]);
+  const { rows } = await pool.query('SELECT adminid FROM admins ORDER BY RANDOM() LIMIT 1');
+  const adminId = rows[0].adminid;
+  sessions.set(id, { adminId });
+  await pool.query('INSERT INTO sessions (id, adminId) VALUES ($1, $2)', [id, adminId]);
   res.send({ sessionId: id });
 });
 
