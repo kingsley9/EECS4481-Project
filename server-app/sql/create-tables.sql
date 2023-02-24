@@ -1,14 +1,26 @@
-CREATE TABLE sessions (
-  id UUID PRIMARY KEY NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+-- Create admins table
+CREATE TABLE admins (
+  adminId SERIAL PRIMARY KEY,
+  username VARCHAR(255),
+  password VARCHAR(255)
 );
 
-CREATE TABLE messages (
-  id SERIAL PRIMARY KEY NOT NULL,
-  sender VARCHAR(255),
-  receiver VARCHAR(255),
-  message TEXT NOT NULL,
-  session_id UUID NOT NULL REFERENCES sessions(id),
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  UNIQUE (sender, receiver, session_id)
+-- Create sessions table
+CREATE TABLE sessions (
+  id UUID PRIMARY KEY,
+  name VARCHAR(255),
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP,
+  adminId INTEGER,
+  FOREIGN KEY (adminId) REFERENCES admins(adminId)
+);
+
+-- Create user_messages table
+CREATE TABLE user_messages (
+  id SERIAL PRIMARY KEY,
+  session UUID,
+  senderType VARCHAR(255),
+  message TEXT,
+  created_at TIMESTAMP,
+  FOREIGN KEY (session) REFERENCES sessions(id)
 );

@@ -6,10 +6,11 @@ const basicAuth = require('basic-auth');
 const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
+const jwt = require('jsonwebtoken');
 
 app.use(
   cors({
-    origin: '*',
+    origin: 'http://localhost:3000',
   })
 );
 
@@ -21,9 +22,10 @@ const pool = new Pool({
   port: 5432,
 });
 
-const sessions = new Map();
+app.use(bodyParser.json());
+const secret = 'mysecretkey';
 
-app.post('/login', (req, res) => {
+app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
 
   pool.query('SELECT * FROM admins WHERE username = $1 AND password = $2', [username, password], (error, results) => {
@@ -31,7 +33,9 @@ app.post('/login', (req, res) => {
       console.error(error);
       res.status(500).send('Internal server error');
     } else if (results.rows.length > 0) {
-      res.status(200).send('Login successful');
+      const admin = { username: username, role: 'admin' };
+      const token = jwt.sign(admin, secret, { expiresIn: '1h' });
+      res.status(200).send({ token });
     } else {
       res.status(401).send('Invalid username or password');
     }
@@ -39,35 +43,51 @@ app.post('/login', (req, res) => {
 });
 
 const auth = (req, res, next) => {
-  const user = basicAuth(req);
-  if (!user || user.name !== 'admin' || user.pass !== 'password') {
-    res.set('WWW-Authenticate', 'Basic realm="401"');
-    res.sendStatus(401);
-    return;
+  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+  if (!token) {
+    return res.status(401).send('Unauthorized request');
   }
-  next();
+
+  jwt.verify(token, secret, (err, decoded) => {
+    if (err) {
+      return res.status(401).send('Unauthorized request');
+    }
+
+    if (decoded.admin !== 'admin') {
+      return res.status(403).send('Forbidden');
+    }
+
+    req.admin = decoded.username;
+    next();
+  });
 };
 
-app.use(bodyParser.json());
+app.get('/api/admin', auth, (req, res) => {
+  res.status(200).send(`Welcome ${req.admin}`);
+});
 
-app.post('/session', async (req, res) => {
+app.post('/api/user/session', async (req, res) => {
   const id = uuid.v4();
   sessions.set(id, {});
   await pool.query('INSERT INTO sessions (id) VALUES ($1)', [id]);
   res.send({ sessionId: id });
 });
 
-app.get('/sessions', auth, async (req, res) => {
+app.get('/api/admin/sessions', auth, async (req, res) => {
   const { rows } = await pool.query('SELECT id FROM sessions');
   res.send(rows.map(({ id }) => ({ id })));
 });
 
-app.post('/message', async (req, res) => {
-  const { recipient, message, sessionId } = req.body;
+app.post('/api/user/message', async (req, res) => {
+  const { content, sender, timestamp } = req.body;
   if (!sessions.has(sessionId)) {
     res.sendStatus(404);
     return;
   }
+  const { recipient } = await pool.query(
+    'SELECT sender, message FROM messages WHERE session_id = $1',
+    [sessionId]
+  );
   await pool.query(
     'INSERT INTO messages (receiver, message, session_id) VALUES ($1, $2, $3)',
     [recipient, message, sessionId]
@@ -75,7 +95,7 @@ app.post('/message', async (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/admin/messages', auth, async (req, res) => {
+app.get('/api/user/messages', auth, async (req, res) => {
   const { sessionId } = req.query;
   const { rows } = await pool.query(
     'SELECT receiver, message FROM messages WHERE session_id = $1',
