@@ -68,16 +68,11 @@ app.get('/api/admin', auth, (req, res) => {
   res.status(200).send(`Welcome ${req.admin}`);
 });
 
-app.post('/api/user/session', async (req, res) => {
+app.post('/api/session', async (req, res) => {
   const id = uuid.v4();
   sessions.set(id, {});
   await pool.query('INSERT INTO sessions (id) VALUES ($1)', [id]);
   res.send({ sessionId: id });
-});
-
-app.get('/api/admin/sessions', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT id FROM sessions');
-  res.send(rows.map(({ id }) => ({ id })));
 });
 
 app.post('/api/user/message', async (req, res) => {
