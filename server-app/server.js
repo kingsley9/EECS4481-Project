@@ -96,7 +96,7 @@ app.post('/api/user/message', async (req, res) => {
 app.get('/api/messages', async (req, res) => {
   const sessionId = req.headers.sessionid;
   const { rows } = await pool.query(
-    'SELECT sender, message, created_at FROM user_messages WHERE session = $1',
+    'SELECT id, sender, message, created_at FROM user_messages WHERE session = $1',
     [sessionId]
   );
   res.send(rows);
