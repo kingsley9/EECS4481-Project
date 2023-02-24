@@ -1,5 +1,5 @@
 import React from 'react';
-import { Message } from '../services/user-messages';
+import { Message } from '../data/message';
 
 interface Props {
   messages: Message[];
@@ -11,7 +11,8 @@ const Messages: React.FC<Props> = ({ messages }) => {
       {messages.map((message: Message) => (
         <div>
           <span>{message.sender}: </span>
-          <span>{message.content}</span>
+          <span>{message.message}</span>
+          <span>{message.timestamp.toISOString()}</span>
         </div>
       ))}
     </div>

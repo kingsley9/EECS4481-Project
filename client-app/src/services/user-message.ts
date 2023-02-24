@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { API_URL } from '../config/default';
-import { getCookie } from '../utils/cookie';
 
 export const getMessages = async (sessionId: string) => {
   const response = await axios.get(`${API_URL}/api/user/messages`, {
@@ -20,9 +19,3 @@ export const sendMessage = async (message: string, sessionId: string) => {
   });
   return response.data;
 };
-
-export interface Message {
-  content: string;
-  sender: string;
-  timestamp: Date;
-}
