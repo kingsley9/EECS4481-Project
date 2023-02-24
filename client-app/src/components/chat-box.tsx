@@ -6,6 +6,7 @@ import { getMessages, sendMessage } from '../services/user-message';
 import './chat-box.css';
 interface Props {
   sessionId: string;
+  token?: string;
 }
 
 const ChatBox: React.FC<Props> = (props) => {
@@ -21,7 +22,12 @@ const ChatBox: React.FC<Props> = (props) => {
   }, [props.sessionId]);
 
   const handleSend = async (text: string) => {
-    await sendMessage(text, props.sessionId);
+    if (props.token) {
+      await sendMessage(text, props.sessionId, props.token);
+    } else {
+      await sendMessage(text, props.sessionId);
+    }
+      
     const updatedMessages = await getMessages(props.sessionId);
     setMessages(updatedMessages);
   };
