@@ -1,19 +1,21 @@
-import jwt_decode from 'jwt-decode';
-import { getCookie, removeCookie } from '../utils/cookie';
+import { removeCookie } from '../utils/cookie';
+import { API_URL } from '../config/default';
+import axios from 'axios';
 
-interface DecodedToken {
-  username: string;
-  role: string;
-  exp: number;
-}
-
-export const verifyToken = (token = ''): boolean => {
-  if (token == '') return false;
+export const verifyToken = async (token = ''): Promise<boolean> => {
+  if (token === '') return false;
 
   try {
-    const decoded = jwt_decode<DecodedToken>(token);
-    if (decoded.exp * 1000 > Date.now()) {
-      return true;
+    const response = await axios.get(`${API_URL}/api/admin/verify`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `JWT ${token}`,
+      },
+    });
+
+    if (response.status === 200) {
+      const { isValid } = response.data;
+      return isValid;
     } else {
       removeCookie('token');
       return false;
@@ -23,4 +25,8 @@ export const verifyToken = (token = ''): boolean => {
     removeCookie('token');
     return false;
   }
+};
+
+export const logout = () => {
+    removeCookie('token');
 };

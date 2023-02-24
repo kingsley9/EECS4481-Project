@@ -13,10 +13,14 @@ const Login = () => {
   const token = getCookie('token');
 
   useEffect(() => {
-    if (verifyToken(token)) {
-      navigate('/admin/dashboard');
-    }
-  }, []);
+    const checkToken = async () => {
+      const isValid = await verifyToken(token);
+      if (isValid) {
+        navigate('/admin/dashboard');
+      }
+    };
+    checkToken();
+  }, [token, navigate]);
 
   const handleLogin = async () => {
     try {
