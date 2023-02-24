@@ -46,18 +46,22 @@ const Login = () => {
       <h2>Admin Login</h2>
       <div className="login-form">
         <input
+          className="login-input"
           type="text"
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
         <input
+          className="login-input"
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button onClick={handleLogin}>Login</button>
+        <button className="login-button" onClick={handleLogin}>
+          Login
+        </button>
       </div>
     </div>
   );
