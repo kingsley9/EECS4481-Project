@@ -1,36 +1,43 @@
 import { useState, useEffect } from 'react';
-import { setCookie } from '../../utils/cookie';
+import { useNavigate } from 'react-router-dom';
+import { setCookie, getCookie } from '../../utils/cookie';
 import { API_URL } from '../../config/default';
 import { verifyToken } from '../../services/jwt';
+import axios from 'axios';
 import './login.css';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const token = getCookie('token');
 
   useEffect(() => {
-    if (verifyToken()) {
-      window.location.href = '/admin/dashboard';
-    }
-  }, []);
+    const checkToken = async () => {
+      const isValid = await verifyToken(token);
+      if (isValid) {
+        navigate('/admin/dashboard');
+      }
+    };
+    checkToken();
+  }, [token, navigate]);
 
   const handleLogin = async () => {
-    const response = await fetch(`${API_URL}/api/admin/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    try {
+      const response = await axios.post(`${API_URL}/api/admin/login`, {
         username,
         password,
-      }),
-    });
-    if (response.ok) {
-      const token = await response.text();
-      setCookie('token', token);
-      window.location.href = '/admin/dashboard';
-    } else {
-      alert('Invalid username or password');
+      });
+      if (response.status === 200) {
+        const { token } = response.data;
+        setCookie('token', token);
+        navigate('/admin/dashboard');
+      } else {
+        alert('Invalid username or password');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred while logging in.');
     }
   };
 

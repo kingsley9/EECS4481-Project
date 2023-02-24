@@ -1,6 +1,7 @@
 import React from 'react';
-import { Message } from '../services/user-messages';
 import './Messages.css';
+
+import { Message } from '../data/message';
 
 interface Props {
   messages: Message[];
@@ -19,7 +20,8 @@ const Messages: React.FC<Props> = ({ messages, currentUser }) => {
         >
           <span>{message.sender}:&nbsp;</span>
 
-          <span>{message.content}</span>
+          <span>{message.sender}: </span>
+          <span>{message.message}</span>
         </div>
       ))}
     </div>

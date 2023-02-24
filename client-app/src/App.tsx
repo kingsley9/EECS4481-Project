@@ -7,7 +7,7 @@ import Header from './components/common/header';
 import Footer from './components/common/footer';
 import Login from './pages/admin/login';
 import Dashboard from './pages/dashboard/dashboard';
-// import AdminDashboard from './pages/admin/dashboard';
+import AdminDashboard from './pages/admin/admin-dashboard';
 
 function App() {
   return (
@@ -16,10 +16,10 @@ function App() {
       <div className="content">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/about" element={<About />} />
           <Route path="/admin/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
         </Routes>
       </div>
       <Footer />
