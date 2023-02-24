@@ -10,26 +10,7 @@ interface Props {
 
 const ChatBox: React.FC<Props> = (props) => {
   const today: Date = new Date();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      message: 'Hi there! How can I help you today?',
-      sender: 'Admin1',
-      timestamp: today,
-    },
-    {
-      id: 2,
-      message: 'Hi! I need some assistance with my account.',
-      sender: 'King88',
-      timestamp: today,
-    },
-    {
-      id: 3,
-      message: 'Sure, what can I help you with?',
-      sender: 'Admin1',
-      timestamp: today,
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     const fetchMessages = async () => {

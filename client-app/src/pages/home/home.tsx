@@ -46,6 +46,10 @@ const Home = () => {
           <FontAwesomeIcon icon={faComments} size="3x" />
           {sessionCookie ? 'Continue Chat' : 'Get Support'}
         </button>
+        {/* <Link to="/dashboard" className="home-button">
+          <FontAwesomeIcon icon={faComments} size="3x" />
+          Get Support
+        </Link> */}
         <Link to="/admin/dashboard" className="home-button">
           <FontAwesomeIcon icon={faUserTie} size="3x" />
           Admin Dashboard
