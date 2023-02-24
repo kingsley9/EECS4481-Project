@@ -1,0 +1,39 @@
+form {
+  margin-top: auto; /* Push form to the bottom */
+}
+form textarea {
+  width: 85%;
+  height: 70px;
+  font-size: 1.2rem;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #d3d3d3;
+  resize: none;
+  background-color:#f4f4f4 ;
+  margin-top: auto;
+  
+}
+form button {
+height: 40px;
+  font-size: 1.2rem;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-top:auto;
+  margin-left: auto; /* Moved the send button to the right */
+  display: block;
+  border-radius: 5px; /* Added border radius */
+  transition: background-color 0.2s ease-in-out; /* Added transition effect */
+}
+button:hover {
+  background-color: #0056b3; /* Added hover effect */
+}
+
+.message-bar{
+    display:flex;
+    
+    /* height: 80%; */
+    /* border: 2px solid red; */
+}
