@@ -23,7 +23,9 @@ const pool = new Pool({
 });
 
 app.use(bodyParser.json());
-const secret = 'mysecretkey';
+
+const sessions = new Map();
+const secret = 'mysecretkey'; // TODO: use env to import this value.
 
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
