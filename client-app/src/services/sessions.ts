@@ -10,3 +10,13 @@ export const getSessions = async (token: string) => {
   });
   return response.data;
 };
+
+export const updateSessionAdmin = async (sessionId: string, adminId: string, token = '') => {
+  const response = await axios.patch(`${API_URL}/api/user/update`, {sessionId, adminId}, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `JWT ${token}`,
+    },
+  });
+  return response.data;
+};

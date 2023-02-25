@@ -12,21 +12,9 @@ export const getMessages = async (sessionId: string) => {
 };
 
 export const sendMessage = async (message: string, sessionId: string, token = '') => {
-  const response = await axios.post(`${API_URL}/api/user/message`, {message, token}, {
+  const response = await axios.post(`${API_URL}/api/user/message`, {message, sessionId, token}, {
     headers: {
       'Content-Type': 'application/json',
-      'SessionId': `${sessionId}`,
-    },
-  });
-  return response.data;
-};
-
-export const sendAdminMessage = async (message: string, sessionId: string, token: string) => {
-  const response = await axios.post(`${API_URL}/api/admin/message`, {message}, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `JWT ${token}`,
-      'SessionId': `${sessionId}`,
     },
   });
   return response.data;

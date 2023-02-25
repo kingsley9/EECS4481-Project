@@ -13,7 +13,7 @@ app.use(
   cors({
     origin: 'http://localhost:3000',
     credentials: true,
-    methods: ['GET','POST'],
+    methods: ['GET','POST','PATCH'],
     allowedHeaders: ['Authorization', 'Content-Type', 'SessionId'],
   })
 );
@@ -92,6 +92,13 @@ app.get('/api/admin/sessions', auth, async (req, res) => {
   res.send(rows);
 });
 
+app.get('/api/admin/list', auth, async (req, res) => {
+  const { rows } = await pool.query(
+    'SELECT adminid, username FROM admins'
+  );
+  res.send(rows);
+});
+
 app.post('/api/session', async (req, res) => {
   const id = uuid.v4();
   const { rows } = await pool.query('SELECT adminid FROM admins ORDER BY RANDOM() LIMIT 1');
@@ -102,8 +109,7 @@ app.post('/api/session', async (req, res) => {
 });
 
 app.post('/api/user/message', async (req, res) => {
-  const sessionId = req.headers.sessionid;
-  const { message, token } = req.body;
+  const { message, sessionId, token } = req.body;
   let userType = 'user';
   if (token != '') {
     jwt.verify(token, secret, (err, decoded) => {
@@ -125,6 +131,21 @@ app.post('/api/user/message', async (req, res) => {
     [userType, message, sessionId]
   );
   res.sendStatus(200);
+});
+
+
+app.patch('/api/user/update', auth, async (req, res) => {
+  const { sessionId, adminId } = req.body;
+  try {
+    await pool.query(
+      'UPDATE sessions SET adminId = $1, updated_at = NOW() WHERE id = $2',
+      [adminId, sessionId]
+    );
+    res.sendStatus(200);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.get('/api/messages', async (req, res) => {
