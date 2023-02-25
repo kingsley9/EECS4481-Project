@@ -2,7 +2,7 @@
 CREATE TYPE senderType AS ENUM ('admin', 'user');
 
 CREATE TABLE admins (
-  adminId SERIAL PRIMARY KEY NOT NULL,
+  adminid SERIAL PRIMARY KEY NOT NULL,
   username VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL
 );
@@ -12,7 +12,7 @@ CREATE TABLE sessions (
   id UUID PRIMARY KEY NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  adminId INTEGER NOT NULL,
+  adminid INTEGER NOT NULL,
   FOREIGN KEY (adminId) REFERENCES admins(adminId)
 );
 
