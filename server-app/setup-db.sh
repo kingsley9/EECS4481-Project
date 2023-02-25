@@ -13,4 +13,5 @@ sudo -u postgres psql -c "CREATE DATABASE messaging_app;"
 
 # Create the dbadmin user and grant all permissions to the messaging_app database
 sudo -u postgres psql -c "CREATE USER dbadmin WITH PASSWORD 'password';"
+sudo -u postgres psql -c "ALTER DATABASE messaging_app OWNER TO dbadmin;"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE messaging_app TO dbadmin;"
