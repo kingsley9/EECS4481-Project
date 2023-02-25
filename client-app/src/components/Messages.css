@@ -1,6 +1,10 @@
 .messages-container {
   display: flex;
   flex-direction: column;
+  overflow: scroll;
+  height: 400px;
+  padding-top: 30px;
+  
 }
 
 .message {
@@ -11,10 +15,14 @@
 
 .sent {
   align-self: flex-end;
-  background-color: #d1d5db;
+  background-color: #e1e2e4;
 }
 
 .received {
   align-self: flex-start;
-  background-color: #93c5fd;
+  background-color: #9dc6d5;
+}
+/* Hide the scrollbar */
+::-webkit-scrollbar {
+  display: none;
 }

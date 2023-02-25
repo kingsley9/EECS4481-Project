@@ -1,6 +1,7 @@
 export interface Message {
-    id: number;
-    sender: string;
-    message: string;
-    timestamp: Date;
+  id: string;
+  sender: string;
+  message: string;
+  session: string;
+  timestamp: Date;
 }
