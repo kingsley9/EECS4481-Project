@@ -7,10 +7,10 @@ import './chat-box.css';
 interface Props {
   sessionId: string;
   token?: string;
+  role: string;
 }
 
 const ChatBox: React.FC<Props> = (props) => {
-  const today: Date = new Date();
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const ChatBox: React.FC<Props> = (props) => {
     } else {
       await sendMessage(text, props.sessionId);
     }
-      
+
     const updatedMessages = await getMessages(props.sessionId);
     setMessages(updatedMessages);
   };
@@ -35,7 +35,12 @@ const ChatBox: React.FC<Props> = (props) => {
   return (
     <div className="chat-area">
       <div>
-        <Messages messages={messages} currentUser={''} />
+        <Messages
+          messages={messages}
+          currentUser={props.sessionId}
+          role={props.role}
+        />
+        <hr />
         <ChatInput onSend={handleSend} />
       </div>
     </div>
