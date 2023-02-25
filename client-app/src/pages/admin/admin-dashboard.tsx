@@ -15,6 +15,7 @@ const AdminDashboard = () => {
   const [adminMessage, setAdminMessage] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [sessionId, setSessionId] = useState<string>('');
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     const checkToken = async () => {
@@ -65,7 +66,7 @@ const AdminDashboard = () => {
     <div style={{ margin: 'auto' }}>
       <h1>Admin Dashboard</h1>
       <p>{adminMessage}</p>
-      <button className="logout-button" onClick={handleLogout}>
+      <button className="logout-button " onClick={handleLogout}>
         Logout
       </button>
       <div className="admin-dashboard">
@@ -73,14 +74,18 @@ const AdminDashboard = () => {
           <h2 style={{ margin: '15px' }}>Conversations</h2>
           <ul>
             {conversations.map((conversation) => (
-              <li key={conversation.id} onClick={() => handleConversationClick(conversation.id)}>
+              <li
+                key={conversation.id}
+                onClick={() => handleConversationClick(conversation.id)}
+                className={sessionId === conversation.id ? 'selected' : ''}
+              >
                 {conversation.id}
               </li>
             ))}
           </ul>
         </div>
         <div className="admin-content">
-          <ChatBox sessionId={sessionId} token={token} />
+          <ChatBox sessionId={sessionId} token={token} role="admin" />
         </div>
       </div>
     </div>

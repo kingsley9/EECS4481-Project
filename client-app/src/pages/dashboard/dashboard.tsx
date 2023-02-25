@@ -19,7 +19,7 @@ const Dashboard = () => {
       <h1>Dashboard</h1>
       <p>Welcome to the Dashboard!</p>
 
-      <ChatBox sessionId={sessionId} />
+      <ChatBox sessionId={sessionId} role="user" />
     </div>
   );
 };

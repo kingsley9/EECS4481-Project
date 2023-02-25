@@ -6,20 +6,19 @@ import { Message } from '../data/message';
 interface Props {
   messages: Message[];
   currentUser: string;
+  role: string;
 }
 
-const Messages: React.FC<Props> = ({ messages, currentUser }) => {
+const Messages: React.FC<Props> = ({ messages, currentUser, role }) => {
+  // console.log(messages[0].session);
   return (
     <div className="messages-container">
       {messages.map((message: Message) => (
         <div
-          className={`message ${
-            message.sender === currentUser ? 'sent' : 'received'
-          }`}
+          className={`message ${role === message.sender ? 'sent' : 'received'}`}
           key={message.id}
         >
           <span>{message.sender}:&nbsp;</span>
-
           <span>{message.message}</span>
         </div>
       ))}

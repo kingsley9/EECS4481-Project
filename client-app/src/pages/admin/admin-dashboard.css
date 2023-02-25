@@ -59,7 +59,9 @@
 .admin-panel li:hover {
   background-color: #e4f4f9;
 }
-
+.selected {
+  background-color: #e4f4f9;
+}
 .admin-content {
   width: 100%;
   height: 43rem;
