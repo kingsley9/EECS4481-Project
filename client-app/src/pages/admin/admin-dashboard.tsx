@@ -4,7 +4,9 @@ import { API_URL } from '../../config/default';
 import { useNavigate } from 'react-router-dom';
 import { verifyToken, logout } from '../../services/jwt';
 import { Conversation } from '../../data/conversation';
-import { getSessions } from '../../services/sessions';
+import { Admin } from '../../data/admin';
+import { updateSessionAdmin, getSessions } from '../../services/sessions';
+import { getAdmins } from '../../services/admin';
 import axios from 'axios';
 import ChatBox from '../../components/chat-box';
 import './admin-dashboard.css';
@@ -15,7 +17,8 @@ const AdminDashboard = () => {
   const [adminMessage, setAdminMessage] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [sessionId, setSessionId] = useState<string>('');
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [selectedAdminId, setSelectedAdminId] = useState<string>('');
 
   useEffect(() => {
     const checkToken = async () => {
@@ -48,6 +51,19 @@ const AdminDashboard = () => {
         };
 
         fetchAdminMessage();
+
+        const fetchAdmins = async () => {
+          try {
+            const response = await getAdmins(token);
+            setAdmins(response);
+            setSelectedAdminId(response[0]?.adminid);
+          } catch (error) {
+            console.error(error);
+            alert('An error occurred while fetching admins.');
+          }
+        };
+
+        fetchAdmins();
       }
     };
     checkToken();
@@ -60,6 +76,20 @@ const AdminDashboard = () => {
 
   const handleConversationClick = (sessionId: string) => {
     setSessionId(sessionId);
+  };
+
+  const handleAdminChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedAdminId(event.target.value);
+  };
+
+  const handleUpdateClick = async () => {
+    try {
+      await updateSessionAdmin(sessionId, selectedAdminId, token);
+      alert('Admin updated successfully.');
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred while updating admin.');
+    }
   };
 
   return (
@@ -83,6 +113,21 @@ const AdminDashboard = () => {
               </li>
             ))}
           </ul>
+          <div style={{ margin: '15px' }}>
+            <label htmlFor="admin-dropdown">Assign admin: </label>
+            <select
+              id="admin-dropdown"
+              value={selectedAdminId}
+              onChange={handleAdminChange}
+            >
+              {admins.map((admin) => (
+                <option key={admin.adminid} value={admin.adminid}>
+                  {admin.username}
+                </option>
+              ))}
+            </select>
+            <button onClick={handleUpdateClick}>Update</button>
+          </div>
         </div>
         <div className="admin-content">
           <ChatBox sessionId={sessionId} token={token} role="admin" />
