@@ -1,0 +1,63 @@
+.
+├── .gitignore
+├── package-lock.json
+├── package.json
+├── public
+│   ├── favicon.ico
+│   ├── index.html
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   └── robots.txt
+├── README.md
+├── src
+│   ├── app.css
+│   ├── App.test.tsx
+│   ├── App.tsx
+│   ├── components
+│   │   ├── chat-box.css
+│   │   ├── chat-box.tsx
+│   │   ├── chat-input.css
+│   │   ├── chat-input.tsx
+│   │   ├── common
+│   │   │   ├── footer.css
+│   │   │   ├── footer.tsx
+│   │   │   ├── header.css
+│   │   │   └── header.tsx
+│   │   ├── Messages.css
+│   │   └── messages.tsx
+│   ├── config
+│   │   └── default.js
+│   ├── data
+│   │   ├── admin.ts
+│   │   ├── conversation.ts
+│   │   └── message.ts
+│   ├── index.css
+│   ├── index.tsx
+│   ├── logo.svg
+│   ├── pages
+│   │   ├── about
+│   │   │   └── about.tsx
+│   │   ├── admin
+│   │   │   ├── admin-dashboard.css
+│   │   │   ├── admin-dashboard.tsx
+│   │   │   ├── login.css
+│   │   │   └── login.tsx
+│   │   ├── dashboard
+│   │   │   ├── dashboard.css
+│   │   │   └── dashboard.tsx
+│   │   └── home
+│   │       ├── home.css
+│   │       └── home.tsx
+│   ├── react-app-env.d.ts
+│   ├── reportWebVitals.ts
+│   ├── services
+│   │   ├── admin.ts
+│   │   ├── jwt.ts
+│   │   ├── sessions.ts
+│   │   └── user-message.ts
+│   ├── setupTests.ts
+│   └── utils
+│       ├── cookie.js
+│       └── helpers.js
+└── tsconfig.json
