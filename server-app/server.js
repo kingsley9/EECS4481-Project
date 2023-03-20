@@ -7,6 +7,7 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const helmet = require("helmet");
 const jwt_decode = require('jwt-decode');
 
 app.use(
@@ -17,6 +18,26 @@ app.use(
     allowedHeaders: ['Authorization', 'Content-Type', 'SessionId'],
   })
 );
+
+app.options('*', cors())
+
+app.use(helmet.contentSecurityPolicy());
+app.use(helmet.crossOriginEmbedderPolicy());
+app.use(helmet.crossOriginOpenerPolicy());
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(helmet.dnsPrefetchControl());
+app.use(
+  helmet.frameguard({
+    action: "deny",
+  })
+);
+app.use(helmet.hidePoweredBy());
+app.use(helmet.ieNoOpen());
+app.use(helmet.noSniff());
+app.use(helmet.originAgentCluster());
+app.use(helmet.permittedCrossDomainPolicies());
+app.use(helmet.referrerPolicy());
+app.use(helmet.xssFilter());
 
 const pool = new Pool({
   user: 'dbadmin',
@@ -174,4 +195,4 @@ app.get('/', function (req, res) {
   res.sendFile(path.join(__dirname, '..', 'client-app/src'));
 });
 
-app.listen(8080);
+app.listen(3100);
