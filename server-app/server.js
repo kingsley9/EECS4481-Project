@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
@@ -7,28 +8,28 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
 const jwt = require('jsonwebtoken');
-const helmet = require("helmet");
+const helmet = require('helmet');
 const jwt_decode = require('jwt-decode');
 
 app.use(
   cors({
     origin: 'http://localhost:3000',
     credentials: true,
-    methods: ['GET','POST','PATCH'],
+    methods: ['GET', 'POST', 'PATCH'],
     allowedHeaders: ['Authorization', 'Content-Type', 'SessionId'],
   })
 );
 
-app.options('*', cors())
+app.options('*', cors());
 
 app.use(helmet.contentSecurityPolicy());
 app.use(helmet.crossOriginEmbedderPolicy());
 app.use(helmet.crossOriginOpenerPolicy());
-app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
 app.use(helmet.dnsPrefetchControl());
 app.use(
   helmet.frameguard({
-    action: "deny",
+    action: 'deny',
   })
 );
 app.use(helmet.hidePoweredBy());
@@ -50,7 +51,7 @@ const pool = new Pool({
 app.use(bodyParser.json());
 
 const sessions = new Map();
-const secret = 'mysecretkey'; // TODO: use env to import this value.
+const secret = process.env.JWT_SECRET;
 
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
@@ -63,7 +64,11 @@ app.post('/api/admin/login', (req, res) => {
         console.error(error);
         res.status(500).send('Internal server error');
       } else if (results.rows.length > 0) {
-        const admin = { username: username, adminId: results.rows[0].adminid, role: 'admin' };
+        const admin = {
+          username: username,
+          adminId: results.rows[0].adminid,
+          role: 'admin',
+        };
         const token = jwt.sign(admin, secret, { expiresIn: '1h' });
         res.status(200).send({ token });
       } else {
@@ -94,11 +99,11 @@ const auth = (req, res, next) => {
 };
 
 app.get('/api/admin/verify', auth, (req, res) => {
-  res.status(200).send({isValid: true});
+  res.status(200).send({ isValid: true });
 });
 
 app.get('/api/admin', auth, (req, res) => {
-  res.status(200).send({message: `Welcome ${req.admin}`});
+  res.status(200).send({ message: `Welcome ${req.admin}` });
 });
 
 app.get('/api/admin/sessions', auth, async (req, res) => {
@@ -114,18 +119,21 @@ app.get('/api/admin/sessions', auth, async (req, res) => {
 });
 
 app.get('/api/admin/list', auth, async (req, res) => {
-  const { rows } = await pool.query(
-    'SELECT adminid, username FROM admins'
-  );
+  const { rows } = await pool.query('SELECT adminid, username FROM admins');
   res.send(rows);
 });
 
 app.post('/api/session', async (req, res) => {
   const id = uuid.v4();
-  const { rows } = await pool.query('SELECT adminid FROM admins ORDER BY RANDOM() LIMIT 1');
+  const { rows } = await pool.query(
+    'SELECT adminid FROM admins ORDER BY RANDOM() LIMIT 1'
+  );
   const adminId = rows[0].adminid;
   sessions.set(id, { adminId });
-  await pool.query('INSERT INTO sessions (id, adminId) VALUES ($1, $2)', [id, adminId]);
+  await pool.query('INSERT INTO sessions (id, adminId) VALUES ($1, $2)', [
+    id,
+    adminId,
+  ]);
   res.send({ sessionId: id });
 });
 
@@ -137,23 +145,21 @@ app.post('/api/user/message', async (req, res) => {
       if (err) {
         return res.status(401).send('Unauthorized request');
       }
-  
+
       if (decoded.role !== 'admin') {
         return res.status(403).send('Forbidden');
       }
-  
+
       userType = decoded.role;
-      
     });
   }
-  
+
   await pool.query(
     'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
     [userType, message, sessionId]
   );
   res.sendStatus(200);
 });
-
 
 app.patch('/api/user/update', auth, async (req, res) => {
   const { sessionId, adminId } = req.body;
