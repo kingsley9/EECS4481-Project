@@ -24,3 +24,6 @@ jmeter.log
 .cache
 .vscode/*.log
 .make.*
+
+# env file
+.env
