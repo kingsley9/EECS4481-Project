@@ -10,6 +10,8 @@ const jwt = require('jsonwebtoken');
 const helmet = require("helmet");
 const jwt_decode = require('jwt-decode');
 
+require('dotenv').config();
+
 app.use(
   cors({
     origin: 'http://localhost:3000',
@@ -50,7 +52,7 @@ const pool = new Pool({
 app.use(bodyParser.json());
 
 const sessions = new Map();
-const secret = 'mysecretkey'; // TODO: use env to import this value.
+const secret = process.env.JWT_SECRET;
 
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
