@@ -184,7 +184,7 @@ app.post('/api/user/message', async (req, res) => {
     res.sendStatus(200);
   } catch (error) {
     console.error(error);
-    res.status(500).send('Internal server error!');
+    res.status(500).send('Internal server error');
   }
 });
 
@@ -198,7 +198,7 @@ app.patch('/api/user/update', auth, async (req, res) => {
     res.sendStatus(200);
   } catch (error) {
     console.error(error);
-    res.status(500).send('Internal server error!');
+    res.status(500).send('Internal server error');
   }
 });
 
@@ -216,7 +216,7 @@ app.get('/api/messages', async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).send("Be Aware! Internal server error');
+    res.status(500).send('Internal server error');
   }
 });
 
