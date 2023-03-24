@@ -7,8 +7,9 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
 const jwt = require('jsonwebtoken');
-const helmet = require("helmet");
+const helmet = require('helmet');
 const jwt_decode = require('jwt-decode');
+const crypto = require('crypto');
 
 require('dotenv').config();
 
@@ -16,21 +17,21 @@ app.use(
   cors({
     origin: 'http://localhost:3000',
     credentials: true,
-    methods: ['GET','POST','PATCH'],
+    methods: ['GET', 'POST', 'PATCH'],
     allowedHeaders: ['Authorization', 'Content-Type', 'SessionId'],
   })
 );
 
-app.options('*', cors())
+app.options('*', cors());
 
 app.use(helmet.contentSecurityPolicy());
 app.use(helmet.crossOriginEmbedderPolicy());
 app.use(helmet.crossOriginOpenerPolicy());
-app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
 app.use(helmet.dnsPrefetchControl());
 app.use(
   helmet.frameguard({
-    action: "deny",
+    action: 'deny',
   })
 );
 app.use(helmet.hidePoweredBy());
@@ -42,10 +43,10 @@ app.use(helmet.referrerPolicy());
 app.use(helmet.xssFilter());
 
 const pool = new Pool({
-  user: 'dbadmin',
+  user: process.env.DB_USER,
   host: 'localhost',
   database: 'messaging_app',
-  password: 'password',
+  password: process.env.DB_PASSWORD,
   port: 5432,
 });
 
@@ -58,24 +59,38 @@ app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
 
   pool.query(
-    'SELECT * FROM admins WHERE username = $1 AND password = $2',
-    [username, password],
+    'SELECT * FROM admins WHERE username = $1',
+    [username],
     (error, results) => {
-      try{
-      if (error) {
+      try {
+        if (error) {
+          console.error(error);
+          res.status(500).send('Internal server error');
+        } else if (results.rows.length > 0) {
+          const storedPassword = results.rows[0].password;
+          const passwordsMatch = crypto.timingSafeEqual(
+            Buffer.from(password),
+            Buffer.from(storedPassword)
+          );
+          if (passwordsMatch) {
+            const admin = {
+              username: username,
+              adminId: results.rows[0].adminid,
+              role: 'admin',
+            };
+            const token = jwt.sign(admin, secret, { expiresIn: '1h' });
+            res.status(200).send({ token });
+          } else {
+            res.status(401).send('Invalid username or password');
+          }
+        } else {
+          res.status(401).send('Invalid username or password');
+        }
+      } catch (error) {
         console.error(error);
         res.status(500).send('Internal server error');
-      } else if (results.rows.length > 0) {
-        const admin = { username: username, adminId: results.rows[0].adminid, role: 'admin' };
-        const token = jwt.sign(admin, secret, { expiresIn: '1h' });
-        res.status(200).send({ token });
-      } else {
-        res.status(401).send('Invalid username or password');
       }
     }
-    catch (error) {
-      console.error(error);
-      res.status(500).send('Internal server error')}}
   );
 });
 
@@ -109,13 +124,12 @@ const auth = (req, res, next) => {
   }
 };
 
-
 app.get('/api/admin/verify', auth, (req, res) => {
-  res.status(200).send({isValid: true});
+  res.status(200).send({ isValid: true });
 });
 
 app.get('/api/admin', auth, (req, res) => {
-  res.status(200).send({message: `Welcome ${req.admin}`});
+  res.status(200).send({ message: `Welcome ${req.admin}` });
 });
 
 app.get('/api/admin/sessions', auth, async (req, res) => {
@@ -137,9 +151,7 @@ app.get('/api/admin/sessions', auth, async (req, res) => {
 
 app.get('/api/admin/list', auth, async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      'SELECT adminid, username FROM admins'
-    );
+    const { rows } = await pool.query('SELECT adminid, username FROM admins');
     res.send(rows);
   } catch (error) {
     console.error(error);
@@ -150,10 +162,15 @@ app.get('/api/admin/list', auth, async (req, res) => {
 app.post('/api/session', async (req, res) => {
   const id = uuid.v4();
   try {
-    const { rows } = await pool.query('SELECT adminid FROM admins ORDER BY RANDOM() LIMIT 1');
+    const { rows } = await pool.query(
+      'SELECT adminid FROM admins ORDER BY RANDOM() LIMIT 1'
+    );
     const adminId = rows[0].adminid;
     sessions.set(id, { adminId });
-    await pool.query('INSERT INTO sessions (id, adminId) VALUES ($1, $2)', [id, adminId]);
+    await pool.query('INSERT INTO sessions (id, adminId) VALUES ($1, $2)', [
+      id,
+      adminId,
+    ]);
     res.send({ sessionId: id });
   } catch (error) {
     console.error(error);
@@ -169,13 +186,12 @@ app.post('/api/user/message', async (req, res) => {
       if (err) {
         return res.status(401).send('This is an Unauthorized request');
       }
-  
+
       if (decoded.role !== 'admin') {
         return res.status(403).send('This is Forbidden');
       }
-  
+
       userType = decoded.role;
-      
     });
   }
   try {
