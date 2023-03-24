@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
@@ -8,28 +7,30 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
 const jwt = require('jsonwebtoken');
-const helmet = require('helmet');
+const helmet = require("helmet");
 const jwt_decode = require('jwt-decode');
+
+require('dotenv').config();
 
 app.use(
   cors({
     origin: 'http://localhost:3000',
     credentials: true,
-    methods: ['GET', 'POST', 'PATCH'],
+    methods: ['GET','POST','PATCH'],
     allowedHeaders: ['Authorization', 'Content-Type', 'SessionId'],
   })
 );
 
-app.options('*', cors());
+app.options('*', cors())
 
 app.use(helmet.contentSecurityPolicy());
 app.use(helmet.crossOriginEmbedderPolicy());
 app.use(helmet.crossOriginOpenerPolicy());
-app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(helmet.dnsPrefetchControl());
 app.use(
   helmet.frameguard({
-    action: 'deny',
+    action: "deny",
   })
 );
 app.use(helmet.hidePoweredBy());
@@ -60,50 +61,61 @@ app.post('/api/admin/login', (req, res) => {
     'SELECT * FROM admins WHERE username = $1 AND password = $2',
     [username, password],
     (error, results) => {
+      try{
       if (error) {
         console.error(error);
         res.status(500).send('Internal server error');
       } else if (results.rows.length > 0) {
-        const admin = {
-          username: username,
-          adminId: results.rows[0].adminid,
-          role: 'admin',
-        };
+        const admin = { username: username, adminId: results.rows[0].adminid, role: 'admin' };
         const token = jwt.sign(admin, secret, { expiresIn: '1h' });
         res.status(200).send({ token });
       } else {
         res.status(401).send('Invalid username or password');
       }
     }
+    catch (error) {
+      console.error(error);
+      res.status(500).send('Internal server error')}}
   );
 });
 
 const auth = (req, res, next) => {
-  const token =
-    req.headers.authorization && req.headers.authorization.split(' ')[1];
-  if (!token) {
-    return res.status(401).send('Unauthorized request');
-  }
-  jwt.verify(token, secret, (err, decoded) => {
-    if (err) {
+  try {
+    const token =
+      req.headers.authorization && req.headers.authorization.split(' ')[1];
+    if (!token) {
       return res.status(401).send('Unauthorized request');
     }
+    jwt.verify(token, secret, (err, decoded) => {
+      try {
+        if (err) {
+          return res.status(401).send('Unauthorized request');
+        }
 
-    if (decoded.role !== 'admin') {
-      return res.status(403).send('Forbidden');
-    }
+        if (decoded.role !== 'admin') {
+          return res.status(403).send('Forbidden');
+        }
 
-    req.admin = decoded.username;
-    next();
-  });
+        req.admin = decoded.username;
+        next();
+      } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal server error');
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 };
 
+
 app.get('/api/admin/verify', auth, (req, res) => {
-  res.status(200).send({ isValid: true });
+  res.status(200).send({isValid: true});
 });
 
 app.get('/api/admin', auth, (req, res) => {
-  res.status(200).send({ message: `Welcome ${req.admin}` });
+  res.status(200).send({message: `Welcome ${req.admin}`});
 });
 
 app.get('/api/admin/sessions', auth, async (req, res) => {
@@ -111,30 +123,42 @@ app.get('/api/admin/sessions', auth, async (req, res) => {
     req.headers.authorization && req.headers.authorization.split(' ')[1];
   const decoded = jwt_decode(token);
   const adminId = decoded.adminId;
-  const { rows } = await pool.query(
-    'SELECT id FROM sessions WHERE adminid = $1',
-    [adminId]
-  );
-  res.send(rows);
+  try {
+    const { rows } = await pool.query(
+      'SELECT id FROM sessions WHERE adminid = $1',
+      [adminId]
+    );
+    res.send(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.get('/api/admin/list', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT adminid, username FROM admins');
-  res.send(rows);
+  try {
+    const { rows } = await pool.query(
+      'SELECT adminid, username FROM admins'
+    );
+    res.send(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.post('/api/session', async (req, res) => {
   const id = uuid.v4();
-  const { rows } = await pool.query(
-    'SELECT adminid FROM admins ORDER BY RANDOM() LIMIT 1'
-  );
-  const adminId = rows[0].adminid;
-  sessions.set(id, { adminId });
-  await pool.query('INSERT INTO sessions (id, adminId) VALUES ($1, $2)', [
-    id,
-    adminId,
-  ]);
-  res.send({ sessionId: id });
+  try {
+    const { rows } = await pool.query('SELECT adminid FROM admins ORDER BY RANDOM() LIMIT 1');
+    const adminId = rows[0].adminid;
+    sessions.set(id, { adminId });
+    await pool.query('INSERT INTO sessions (id, adminId) VALUES ($1, $2)', [id, adminId]);
+    res.send({ sessionId: id });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.post('/api/user/message', async (req, res) => {
@@ -143,22 +167,27 @@ app.post('/api/user/message', async (req, res) => {
   if (token != '') {
     jwt.verify(token, secret, (err, decoded) => {
       if (err) {
-        return res.status(401).send('Unauthorized request');
+        return res.status(401).send('This is an Unauthorized request');
       }
-
+  
       if (decoded.role !== 'admin') {
-        return res.status(403).send('Forbidden');
+        return res.status(403).send('This is Forbidden');
       }
-
+  
       userType = decoded.role;
+      
     });
   }
-
-  await pool.query(
-    'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
-    [userType, message, sessionId]
-  );
-  res.sendStatus(200);
+  try {
+    await pool.query(
+      'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
+      [userType, message, sessionId]
+    );
+    res.sendStatus(200);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.patch('/api/user/update', auth, async (req, res) => {
@@ -176,29 +205,48 @@ app.patch('/api/user/update', auth, async (req, res) => {
 });
 
 app.get('/api/messages', async (req, res) => {
-  const sessionId = req.headers.sessionid;
-  if (sessionId != '') {
-    const { rows } = await pool.query(
-      'SELECT id, sender, message, created_at FROM user_messages WHERE session = $1',
-      [sessionId]
-    );
-    res.send(rows);
+  try {
+    const sessionId = req.headers.sessionid;
+    if (sessionId != '') {
+      const { rows } = await pool.query(
+        'SELECT id, sender, message, created_at FROM user_messages WHERE session = $1',
+        [sessionId]
+      );
+      res.send(rows);
+    } else {
+      res.status(400).send('The Session ID not provided');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
   }
 });
 
 app.post('/api/admin/message', auth, async (req, res) => {
-  const sessionId = req.headers.sessionid;
-  const { message, token } = req.body;
-  await pool.query(
-    'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
-    ['admin', message, sessionId]
-  );
-  res.sendStatus(200);
+  try {
+    const sessionId = req.headers.sessionid;
+    const { message, token } = req.body;
+    await pool.query(
+      'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
+      ['admin', message, sessionId]
+    );
+    res.sendStatus(200);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('There is an Internal server eror');
+  }
 });
 
 // Routes
 app.get('/', function (req, res) {
-  res.sendFile(path.join(__dirname, '..', 'client-app/src'));
+  try {
+    res.sendFile(path.join(__dirname, '..', 'client-app/src'));
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
-app.listen(3100);
+app.listen(3100, () => {
+  console.log('Server started on port 3100');
+});
