@@ -60,51 +60,44 @@ app.use(bodyParser.json());
 const sessions = new Map();
 const secret = process.env.JWT_SECRET;
 
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', async (req, res) => {
   const { username, password } = req.body;
 
-  pool.query(
-    'SELECT * FROM admins WHERE username = $1',
-    [username],
-    (error, results) => {
-      try {
-        if (error) {
-          console.error(error);
-          res.status(500).send('Internal server error');
-        } else if (results.rows.length > 0) {
-          const storedPassword = results.rows[0].password;
-          const inputPasswordBuffer = Buffer.from(password);
-          const storedPasswordBuffer = Buffer.from(storedPassword);
-          if (inputPasswordBuffer.length !== storedPasswordBuffer.length) {
-            // If the input password and stored password have different lengths, reject the login attempt
-            res.status(401).send('Invalid username or password');
-          } else {
-            // If the input is correct length check if passwords match
-            const passwordsMatch = crypto.timingSafeEqual(
-              inputPasswordBuffer,
-              storedPasswordBuffer
-            );
-            if (passwordsMatch) {
-              const admin = {
-                username: username,
-                adminId: results.rows[0].adminid,
-                role: 'admin',
-              };
-              const token = jwt.sign(admin, secret, { expiresIn: '1h' });
-              res.status(200).send({ token });
-            } else {
-              res.status(401).send('Invalid username or password');
-            }
-          }
-        } else {
-          res.status(401).send('Invalid username or password');
-        }
-      } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal server error');
-      }
+  try {
+    const result = await pool.query(
+      'SELECT * FROM admins WHERE username = $1',
+      [username]
+    );
+
+    if (result.rows.length === 0) {
+      // user not found
+      res.status(401).send('Invalid username or password');
+      return;
     }
-  );
+
+    const storedPasswordBuffer = Buffer.from(result.rows[0].password);
+    const inputPasswordBuffer = Buffer.from(password);
+    if (
+      storedPasswordBuffer.length !== inputPasswordBuffer.length ||
+      !crypto.timingSafeEqual(storedPasswordBuffer, inputPasswordBuffer)
+    ) {
+      // passwords do not match
+      res.status(401).send('Invalid username or password');
+      return;
+    }
+
+    // passwords match, generate and send JWT token
+    const admin = {
+      username: username,
+      adminId: result.rows[0].adminid,
+      role: 'admin',
+    };
+    const token = jwt.sign(admin, secret, { expiresIn: '1h' });
+    res.status(200).send({ token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 const auth = (req, res, next) => {
