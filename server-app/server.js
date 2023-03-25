@@ -9,7 +9,12 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const helmet = require('helmet');
 const jwt_decode = require('jwt-decode');
+
 const crypto = require('crypto');
+
+const morgan = require('morgan');
+
+app.use(morgan('combined'));
 
 require('dotenv').config();
 
