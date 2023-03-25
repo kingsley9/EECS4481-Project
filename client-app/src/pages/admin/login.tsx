@@ -35,9 +35,9 @@ const Login = () => {
       } else {
         alert('Invalid username or password');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('An error occurred while logging in.');
+      alert(error.response.data);
     }
   };
 
