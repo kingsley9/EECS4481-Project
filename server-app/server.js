@@ -73,20 +73,28 @@ app.post('/api/admin/login', (req, res) => {
           res.status(500).send('Internal server error');
         } else if (results.rows.length > 0) {
           const storedPassword = results.rows[0].password;
-          const passwordsMatch = crypto.timingSafeEqual(
-            Buffer.from(password),
-            Buffer.from(storedPassword)
-          );
-          if (passwordsMatch) {
-            const admin = {
-              username: username,
-              adminId: results.rows[0].adminid,
-              role: 'admin',
-            };
-            const token = jwt.sign(admin, secret, { expiresIn: '1h' });
-            res.status(200).send({ token });
-          } else {
+          const inputPasswordBuffer = Buffer.from(password);
+          const storedPasswordBuffer = Buffer.from(storedPassword);
+          if (inputPasswordBuffer.length !== storedPasswordBuffer.length) {
+            // If the input password and stored password have different lengths, reject the login attempt
             res.status(401).send('Invalid username or password');
+          } else {
+            // If the input is correct length check if passwords match
+            const passwordsMatch = crypto.timingSafeEqual(
+              inputPasswordBuffer,
+              storedPasswordBuffer
+            );
+            if (passwordsMatch) {
+              const admin = {
+                username: username,
+                adminId: results.rows[0].adminid,
+                role: 'admin',
+              };
+              const token = jwt.sign(admin, secret, { expiresIn: '1h' });
+              res.status(200).send({ token });
+            } else {
+              res.status(401).send('Invalid username or password');
+            }
           }
         } else {
           res.status(401).send('Invalid username or password');
