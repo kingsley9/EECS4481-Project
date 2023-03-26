@@ -6,6 +6,7 @@ build.env
 
 # local storage mounts should be ignored
 .local-deps/
+uploads/
 
 # Lerna
 lerna-debug.log
