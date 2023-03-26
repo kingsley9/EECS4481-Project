@@ -11,11 +11,20 @@ export const getMessages = async (sessionId: string) => {
   return response.data;
 };
 
-export const sendMessage = async (message: string, sessionId: string, token = '') => {
-  const response = await axios.post(`${API_URL}/api/user/message`, {message, sessionId, token}, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
+export const sendMessage = async (message: string, sessionId: string, token = '', file?: File | undefined, ) => {
+  const formData = new FormData();
+  if (file)
+    formData.append('file', file);
+  const headers: any = {
+    'SessionId': sessionId,
+    'x-message-content': message,
+    'Content-Type': 'multipart/form-data',
+  };
+  if (token) {
+    headers['x-access-token'] = token;
+  }
+  const response = await axios.post(`${API_URL}/api/user/message`, formData, {
+    headers: headers,
   });
   return response.data;
 };

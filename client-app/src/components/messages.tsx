@@ -10,7 +10,6 @@ interface Props {
 }
 
 const Messages: React.FC<Props> = ({ messages, currentUser, role }) => {
-  // console.log(messages[0].session);
   return (
     <div className="messages-container">
       {messages.map((message: Message) => (
@@ -20,6 +19,11 @@ const Messages: React.FC<Props> = ({ messages, currentUser, role }) => {
         >
           <span>{message.sender}:&nbsp;</span>
           <span>{message.message}</span>
+          {message.files && message.files.map((file) => (
+            <div key={file.filename}>
+              <a href={file.fileURL} target="_blank" rel="noopener noreferrer">{file.filename}</a>
+            </div>
+          ))}
         </div>
       ))}
     </div>

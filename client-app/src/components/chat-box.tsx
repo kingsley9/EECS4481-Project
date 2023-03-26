@@ -4,6 +4,7 @@ import ChatInput from './chat-input';
 import { Message } from '../data/message';
 import { getMessages, sendMessage } from '../services/user-message';
 import './chat-box.css';
+
 interface Props {
   sessionId: string;
   token?: string;
@@ -21,11 +22,11 @@ const ChatBox: React.FC<Props> = (props) => {
     fetchMessages();
   }, [props.sessionId]);
 
-  const handleSend = async (text: string) => {
+  const handleSend = async (text: string, file?: File) => {
     if (props.token) {
-      await sendMessage(text, props.sessionId, props.token);
+      await sendMessage(text, props.sessionId, props.token, file);
     } else {
-      await sendMessage(text, props.sessionId);
+      await sendMessage(text, props.sessionId, undefined, file);
     }
 
     const updatedMessages = await getMessages(props.sessionId);

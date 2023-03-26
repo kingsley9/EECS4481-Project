@@ -44,7 +44,6 @@ app.use(
 
 app.options('*', cors());
 
-app.use(helmet.contentSecurityPolicy());
 app.use(helmet.crossOriginEmbedderPolicy());
 app.use(helmet.crossOriginOpenerPolicy());
 app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
@@ -159,7 +158,7 @@ app.post('/api/session', async (req, res) => {
   res.send({ sessionId: id });
 });
 
-app.post('/api/user/message', auth, upload.single('file'), async (req, res) => {
+app.post('/api/user/message', upload.single('file'), async (req, res) => {
   const sessionId = req.headers.sessionid;
   const message = req.headers["x-message-content"];
   const token = req.headers["x-access-token"];
@@ -188,7 +187,7 @@ app.post('/api/user/message', auth, upload.single('file'), async (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/api/user/file/:filename', auth, async (req, res) => {
+app.get('/api/user/file/:filename', async (req, res) => {
   const filename = req.params.filename;
   const sessionId = req.headers.sessionid;
   const token = req.headers['x-access-token'];
@@ -232,11 +231,21 @@ app.get('/api/messages', async (req, res) => {
       [sessionId]
     );
     const messages = rows.map((message) => {
-      if (message.filename) {
-        const fileUrl = `${req.protocol}://${req.get('host')}/api/user/file/${message.filename}`;
-        return { ...message, fileUrl };
+      const files = [];
+      if (message.filename && message.file_url) {
+        files.push({
+          filename: message.filename,
+          fileUrl: message.file_url,
+        });
       }
-      return message;
+      return {
+        id: message.id,
+        sender: message.sender,
+        message: message.message,
+        session: message.session,
+        timestamp: message.created_at,
+        files,
+      };
     });
     res.send(messages);
   }
