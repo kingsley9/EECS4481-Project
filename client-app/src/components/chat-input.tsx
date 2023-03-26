@@ -60,7 +60,7 @@ const ChatInput: React.FC<Props> = ({ onSend }) => {
             name="file"
             className="file-upload-input"
             id="file-upload"
-            accept=".jpg,.jpeg,.png,.gif"
+            accept=".jpg,.jpeg,.png,.gif,.pdf"
             onChange={handleFileInputChange}
             style={{ position: 'absolute', opacity: 0, zIndex: -1 }}
             innerRef={fileInputRef}

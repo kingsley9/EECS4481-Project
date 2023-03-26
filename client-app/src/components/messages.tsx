@@ -21,7 +21,7 @@ const Messages: React.FC<Props> = ({ messages, currentUser, role }) => {
           <span>{message.message}</span>
           {message.files && message.files.map((file) => (
             <div key={file.filename}>
-              <a href={file.fileURL} target="_blank" rel="noopener noreferrer">{file.filename}</a>
+              <a href={file.fileUrl} target="_blank" rel="noopener noreferrer">{file.filename}</a>
             </div>
           ))}
         </div>

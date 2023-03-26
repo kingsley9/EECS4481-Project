@@ -8,6 +8,7 @@ export const getMessages = async (sessionId: string) => {
       'SessionId': `${sessionId}`,
     },
   });
+  console.log(response.data);
   return response.data;
 };
 

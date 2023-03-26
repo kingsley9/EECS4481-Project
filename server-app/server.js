@@ -219,7 +219,7 @@ app.get('/api/user/file/:filename', async (req, res) => {
   }
 
   // Send the file as an attachment with the original filename
-  const file = path.join(__dirname, '..', filePath);
+  const file = path.join(__dirname, '..', 'uploads', filePath);
   res.download(file, originalFilename);
 });
 
