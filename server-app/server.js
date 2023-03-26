@@ -11,24 +11,34 @@ const jwt = require('jsonwebtoken');
 const helmet = require('helmet');
 const jwt_decode = require('jwt-decode');
 const multer = require('multer');
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '..', 'uploads'));
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, path.join(__dirname, '..', 'uploads'));
+    },
+    filename: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, uniqueSuffix + '-' + file.originalname);
+    },
+  }),
+  fileFilter: function (req, file, cb) {
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      return cb(new Error('Only images and PDFs are allowed'));
+    }
+    cb(null, true);
   },
-  filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now() + '-' + file.originalname);
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100 MB in bytes
   },
 });
-
-const upload = multer({ storage: storage });
 
 app.use(
   cors({
     origin: 'http://localhost:3000',
     credentials: true,
     methods: ['GET', 'POST', 'PATCH'],
-    allowedHeaders: ['Authorization', 'Content-Type', 'SessionId'],
+    allowedHeaders: ['Authorization', 'Content-Type', 'SessionId', 'x-access-token', 'x-message-content'],
   })
 );
 
@@ -150,7 +160,9 @@ app.post('/api/session', async (req, res) => {
 });
 
 app.post('/api/user/message', auth, upload.single('file'), async (req, res) => {
-  const { message, sessionId, token } = req.body;
+  const sessionId = req.headers.sessionid;
+  const message = req.headers["x-message-content"];
+  const token = req.headers["x-access-token"];
   let userType = 'user';
   if (token != '') {
     jwt.verify(token, secret, (err, decoded) => {
@@ -167,9 +179,11 @@ app.post('/api/user/message', auth, upload.single('file'), async (req, res) => {
   }
 
   const filename = req.file ? req.file.filename : null;
+  const originalFilename = req.file ? req.file.originalname : null;
+  const fileUrl = req.file ? `${req.protocol}://${req.get('host')}/api/user/file/${req.file.filename}` : null;
   await pool.query(
-    'INSERT INTO user_messages (sender, message, session, filename) VALUES ($1, $2, $3, $4)',
-    [userType, message, sessionId, filename]
+    'INSERT INTO user_messages (sender, message, session, filename, original_filename, file_url) VALUES ($1, $2, $3, $4, $5, $6)',
+    [userType, message, sessionId, filename, originalFilename, fileUrl]
   );
   res.sendStatus(200);
 });
@@ -177,8 +191,9 @@ app.post('/api/user/message', auth, upload.single('file'), async (req, res) => {
 app.get('/api/user/file/:filename', auth, async (req, res) => {
   const filename = req.params.filename;
   const sessionId = req.headers.sessionid;
+  const token = req.headers['x-access-token'];
   let userType = 'user';
-  if (token != '') {
+  if (token) {
     jwt.verify(token, secret, (err, decoded) => {
       if (err) {
         return res.status(401).send('Unauthorized request');
@@ -191,19 +206,40 @@ app.get('/api/user/file/:filename', auth, async (req, res) => {
       userType = decoded.role;
     });
   }
-  // Check if the user is authorized to download the file
+
+  // Retrieve the file path and original filename from the database
   const { rows } = await pool.query(
-    'SELECT sender FROM user_messages WHERE filename = $1 AND session = $2',
+    'SELECT filename, original_filename, sender FROM user_messages WHERE filename = $1 AND session = $2',
     [filename, sessionId]
   );
   const sender = rows[0]?.sender;
-  if (sender !== 'admin' && sender !== userType) {
+  const filePath = rows[0]?.filename;
+  const originalFilename = rows[0]?.original_filename;
+  if (!filePath || sender !== 'admin' && sender !== userType) {
     return res.status(403).send('Forbidden');
   }
 
-  // Return the file as a download attachment
-  const file = path.join(__dirname, '..', 'uploads', filename);
-  res.download(file);
+  // Send the file as an attachment with the original filename
+  const file = path.join(__dirname, '..', filePath);
+  res.download(file, originalFilename);
+});
+
+app.get('/api/messages', async (req, res) => {
+  const sessionId = req.headers.sessionid;
+  if (sessionId != '') {
+    const { rows } = await pool.query(
+      'SELECT id, sender, message, filename, original_filename, file_url, created_at FROM user_messages WHERE session = $1',
+      [sessionId]
+    );
+    const messages = rows.map((message) => {
+      if (message.filename) {
+        const fileUrl = `${req.protocol}://${req.get('host')}/api/user/file/${message.filename}`;
+        return { ...message, fileUrl };
+      }
+      return message;
+    });
+    res.send(messages);
+  }
 });
 
 app.patch('/api/user/update', auth, async (req, res) => {
@@ -220,16 +256,6 @@ app.patch('/api/user/update', auth, async (req, res) => {
   }
 });
 
-app.get('/api/messages', async (req, res) => {
-  const sessionId = req.headers.sessionid;
-  if (sessionId != '') {
-    const { rows } = await pool.query(
-      'SELECT id, sender, message, created_at FROM user_messages WHERE session = $1',
-      [sessionId]
-    );
-    res.send(rows);
-  }
-});
 
 app.post('/api/admin/message', auth, async (req, res) => {
   const sessionId = req.headers.sessionid;

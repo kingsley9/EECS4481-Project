@@ -4,4 +4,5 @@ export interface Message {
   message: string;
   session: string;
   timestamp: Date;
+  files: { filename: string, fileURL: string }[];
 }
