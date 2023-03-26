@@ -43,3 +43,20 @@ button:hover {
     /* height: 80%; */
     /* border: 2px solid red; */
 }
+.file-upload-label {
+  display: inline-block;
+  background-color: #f2f2f2;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  line-height: 2rem;
+  text-align: center;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  cursor: pointer;
+  align-self: flex-end;
+}
+
+.file-upload-label:hover {
+  background-color: #e2e2e2;
+}
