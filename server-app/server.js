@@ -161,9 +161,9 @@ app.post('/api/session', async (req, res) => {
 app.post('/api/user/message', upload.single('file'), async (req, res) => {
   const sessionId = req.headers.sessionid;
   const message = req.headers["x-message-content"];
-  const token = req.headers["x-access-token"];
+  const token = req.headers["x-access-token"] | null;
   let userType = 'user';
-  if (token != '') {
+  if (token) {
     jwt.verify(token, secret, (err, decoded) => {
       if (err) {
         return res.status(401).send('Unauthorized request');
