@@ -17,8 +17,9 @@ const upload = multer({
       cb(null, path.join(__dirname, '..', 'uploads'));
     },
     filename: function (req, file, cb) {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(null, uniqueSuffix + '-' + file.originalname);
+      const id = uuid.v4();
+      const filename = Date.now() + '-' + id;
+      cb(null, filename);
     },
   }),
   fileFilter: function (req, file, cb) {
@@ -179,63 +180,76 @@ app.post('/api/user/message', upload.single('file'), async (req, res) => {
 
   const filename = req.file ? req.file.filename : null;
   const originalFilename = req.file ? req.file.originalname : null;
-  const fileUrl = req.file ? `${req.protocol}://${req.get('host')}/api/user/file/${req.file.filename}` : null;
+  const fileType = req.file ? req.file.mimetype : null;
   await pool.query(
-    'INSERT INTO user_messages (sender, message, session, filename, original_filename, file_url) VALUES ($1, $2, $3, $4, $5, $6)',
-    [userType, message, sessionId, filename, originalFilename, fileUrl]
+    'INSERT INTO user_messages (sender, message, session, filename, original_filename, file_type) VALUES ($1, $2, $3, $4, $5, $6)',
+    [userType, message, sessionId, filename, originalFilename, fileType]
   );
   res.sendStatus(200);
 });
 
-app.get('/api/user/file/:filename', async (req, res) => {
-  const filename = req.params.filename;
+app.get('/api/user/file/:fileid', async (req, res) => {
+  const fileId = req.params.fileid;
   const sessionId = req.headers.sessionid;
-  const token = req.headers['x-access-token'];
+  const token = req.headers['x-access-token'] | null;
   let userType = 'user';
-  if (token) {
-    jwt.verify(token, secret, (err, decoded) => {
-      if (err) {
-        return res.status(401).send('Unauthorized request');
-      }
-
-      if (decoded.role !== 'admin') {
-        return res.status(403).send('Forbidden');
-      }
-
-      userType = decoded.role;
-    });
+  try {
+    if (token) {
+      jwt.verify(token, secret, (err, decoded) => {
+        if (err) {
+          return res.status(401).send('Unauthorized request');
+        }
+  
+        if (decoded.role !== 'admin') {
+          return res.status(403).send('Forbidden');
+        }
+  
+        userType = decoded.role;
+      });
+    }
+  
+    // Retrieve the file path and original filename from the database
+    const { rows } = await pool.query(
+      'SELECT session, filename, original_filename, file_type FROM user_messages WHERE filename = $1 AND session = $2',
+      [fileId, sessionId]
+    );
+    const filePath = rows[0]?.filename;
+    const fileType = rows[0]?.filename;
+    const session = rows[0]?.session;
+    if ((filePath && userType === 'admin') || (filePath && session === sessionId)) {
+      const file = path.join(__dirname, '..', 'uploads', filePath);
+      res.type(fileType);
+      res.status(200).sendFile(file, function (err) {
+        if (err) {
+          console.error(err);
+          res.status(500).send('Internal server error');
+        } else {
+          console.log('Sent:', filePath);
+        }
+      });
+    } else {
+      return res.status(403).send('Forbidden');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
   }
-
-  // Retrieve the file path and original filename from the database
-  const { rows } = await pool.query(
-    'SELECT filename, original_filename, sender FROM user_messages WHERE filename = $1 AND session = $2',
-    [filename, sessionId]
-  );
-  const sender = rows[0]?.sender;
-  const filePath = rows[0]?.filename;
-  const originalFilename = rows[0]?.original_filename;
-  if (!filePath || sender !== 'admin' && sender !== userType) {
-    return res.status(403).send('Forbidden');
-  }
-
-  // Send the file as an attachment with the original filename
-  const file = path.join(__dirname, '..', 'uploads', filePath);
-  res.download(file, originalFilename);
 });
 
 app.get('/api/messages', async (req, res) => {
   const sessionId = req.headers.sessionid;
   if (sessionId != '') {
     const { rows } = await pool.query(
-      'SELECT id, sender, message, filename, original_filename, file_url, created_at FROM user_messages WHERE session = $1',
+      'SELECT id, sender, message, filename, original_filename, file_type, created_at FROM user_messages WHERE session = $1',
       [sessionId]
     );
     const messages = rows.map((message) => {
       const files = [];
-      if (message.filename && message.file_url) {
+      if (message.filename && message.original_filename && message.file_type) {
         files.push({
-          filename: message.filename,
-          fileUrl: message.file_url,
+          filename: message.original_filename,
+          fileId: message.filename,
+          fileType: message.file_type
         });
       }
       return {

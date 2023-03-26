@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Messages from './messages';
 import ChatInput from './chat-input';
 import { Message } from '../data/message';
-import { getMessages, sendMessage } from '../services/user-message';
+import { getMessages, sendMessage, downloadFile } from '../services/user-message';
 import './chat-box.css';
 
 interface Props {
@@ -33,6 +33,14 @@ const ChatBox: React.FC<Props> = (props) => {
     setMessages(updatedMessages);
   };
 
+  const handleFileDownload = async (fileId: string, fileName: string) => {
+    if (props.token) {
+      await downloadFile(fileId, fileName, props.sessionId, props.token);
+    } else {
+      await downloadFile(fileId, fileName, props.sessionId);
+    }
+  };
+
   return (
     <div className="chat-area">
       <div>
@@ -40,6 +48,7 @@ const ChatBox: React.FC<Props> = (props) => {
           messages={messages}
           currentUser={props.sessionId}
           role={props.role}
+          onFileDownload={handleFileDownload}
         />
         <hr />
         <ChatInput onSend={handleSend} />

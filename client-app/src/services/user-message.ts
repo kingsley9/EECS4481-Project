@@ -8,7 +8,6 @@ export const getMessages = async (sessionId: string) => {
       'SessionId': `${sessionId}`,
     },
   });
-  console.log(response.data);
   return response.data;
 };
 
@@ -28,4 +27,26 @@ export const sendMessage = async (message: string, sessionId: string, token = ''
     headers: headers,
   });
   return response.data;
+};
+
+export const downloadFile = async (fileId: string, filename: string, sessionId: string, token?: string | null) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/user/file/${fileId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'SessionId': sessionId,
+        ...(token && { 'x-access-token': token }),
+      },
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+  } catch (error) {
+    console.error(error);
+    alert('Error downloading file');
+  }
 };
