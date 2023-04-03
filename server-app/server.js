@@ -33,13 +33,21 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024, // 100 MB in bytes
   },
 });
+app.use(express.static(path.join(__dirname, 'client-app', 'build')));
 
+app.get('/', (req, res) => {});
 app.use(
   cors({
     origin: 'http://localhost:3000',
     credentials: true,
     methods: ['GET', 'POST', 'PATCH'],
-    allowedHeaders: ['Authorization', 'Content-Type', 'SessionId', 'x-access-token', 'x-message-content'],
+    allowedHeaders: [
+      'Authorization',
+      'Content-Type',
+      'SessionId',
+      'x-access-token',
+      'x-message-content',
+    ],
   })
 );
 
@@ -168,7 +176,7 @@ app.post('/api/session', async (req, res) => {
 app.post('/api/user/message', upload.single('file'), async (req, res) => {
   const sessionId = req.headers.sessionid;
   const message = req.headers["x-message-content"];
-  const token = req.token;
+  const token = req.headers["x-access-token"] | null;
   let userType = 'user';
   if (token) {
     const adminUsername = token.username;
@@ -192,10 +200,19 @@ app.get('/api/user/file/:fileid', async (req, res) => {
   let userType = 'user';
   try {
     if (token) {
-      const adminUsername = verifyUser(token);
-      if (adminUsername) userType = 'admin';
-    }
+      jwt.verify(token, secret, (err, decoded) => {
+        if (err) {
+          return res.status(401).send('Unauthorized request');
+        }
   
+        if (decoded.role !== 'admin') {
+          return res.status(403).send('Forbidden');
+        }
+  
+        userType = decoded.role;
+      });
+    }
+
     // Retrieve the file path and original filename from the database
     const { rows } = await pool.query(
       'SELECT session, filename, original_filename, file_type FROM user_messages WHERE filename = $1 AND session = $2',
@@ -204,7 +221,10 @@ app.get('/api/user/file/:fileid', async (req, res) => {
     const filePath = rows[0]?.filename;
     const fileType = rows[0]?.filename;
     const session = rows[0]?.session;
-    if ((filePath && userType === 'admin') || (filePath && session === sessionId)) {
+    if (
+      (filePath && userType === 'admin') ||
+      (filePath && session === sessionId)
+    ) {
       const file = path.join(__dirname, '..', 'uploads', filePath);
       res.type(fileType);
       res.status(200).sendFile(file, function (err) {
@@ -237,7 +257,7 @@ app.get('/api/messages', async (req, res) => {
         files.push({
           filename: message.original_filename,
           fileId: message.filename,
-          fileType: message.file_type
+          fileType: message.file_type,
         });
       }
       return {
@@ -267,7 +287,6 @@ app.patch('/api/user/update', auth, async (req, res) => {
   }
 });
 
-
 app.post('/api/admin/message/:adminId', auth, async (req, res) => {
   const recipientId = req.params.adminId;
   const token = req.headers['x-access-token'] | null;
@@ -282,7 +301,7 @@ app.post('/api/admin/message/:adminId', auth, async (req, res) => {
 
 // Routes
 app.get('/', function (req, res) {
-  res.sendFile(path.join(__dirname, '..', 'client-app/src'));
+  res.sendFile(path.join(__dirname, 'client-app', 'build', 'index.html'));
 });
 
 app.listen(3100);
