@@ -1,8 +1,0 @@
-Debugger attached.
-
-> helpdesk-server@0.1.0 start
-> node server.js
-
-Debugger attached.
-Server started on port 3100
-Waiting for the debugger to disconnect...
