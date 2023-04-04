@@ -11,8 +11,11 @@ import AdminDashboard from './pages/admin/admin-dashboard';
 import AdminChat from './pages/admin/admin-chat';
 
 function App() {
+  const basename =
+    process.env.NODE_ENV === 'production' ? '/EECS4481-Project-T5' : '';
+
   return (
-    <Router>
+    <Router basename={basename}>
       <Header />
       <div className="content">
         <Routes>

@@ -202,6 +202,7 @@ app.post('/api/user/message', optionalAuth, upload.single('file'), async (req, r
   const sessionId = req.headers.sessionid;
   const message = req.headers["x-message-content"];
 
+
   let userType = 'user';
 
   const token = req.token;
@@ -305,6 +306,7 @@ app.patch('/api/user/update', auth, async (req, res) => {
     res.status(500).send('Internal server error');
   }
 });
+
 
 app.post('/api/admin/message/:adminId', auth, upload.single('file'), async (req, res) => {
   try {
