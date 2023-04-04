@@ -129,7 +129,7 @@ const auth = async (req, res, next) => {
   }
   try {
     const isValid = await verifyToken(token);
-    console.log(isValid);
+    
     if (isValid) {
       req.token = jwt_decode(token);
       next();
@@ -150,10 +150,7 @@ app.get('/api/admin', auth, (req, res) => {
 });
 
 app.get('/api/admin/sessions', auth, async (req, res) => {
-  const token =
-    req.headers.authorization && req.headers.authorization.split(' ')[1];
-  const decoded = jwt_decode(token);
-  const adminId = decoded.adminId;
+  const adminId = req.token.adminId;
   const { rows } = await pool.query(
     'SELECT id FROM sessions WHERE adminid = $1',
     [adminId]
@@ -183,8 +180,10 @@ app.post('/api/session', async (req, res) => {
 app.post('/api/user/message', upload.single('file'), async (req, res) => {
   const sessionId = req.headers.sessionid;
   const message = req.headers["x-message-content"];
-  const token = req.headers["x-access-token"] | null;
+
   let userType = 'user';
+
+  const token = req.token;
   if (token) {
     const adminUsername = token.username;
     userType = 'admin';
@@ -203,21 +202,12 @@ app.post('/api/user/message', upload.single('file'), async (req, res) => {
 app.get('/api/user/file/:fileid', async (req, res) => {
   const fileId = req.params.fileid;
   const sessionId = req.headers.sessionid;
-  const token = req.headers['x-access-token'] | null;
   let userType = 'user';
   try {
+    const token = req.token;
     if (token) {
-      jwt.verify(token, secret, (err, decoded) => {
-        if (err) {
-          return res.status(401).send('Unauthorized request');
-        }
-  
-        if (decoded.role !== 'admin') {
-          return res.status(403).send('Forbidden');
-        }
-  
-        userType = decoded.role;
-      });
+      const adminUsername = token.username;
+      userType = 'admin';
     }
 
     // Retrieve the file path and original filename from the database

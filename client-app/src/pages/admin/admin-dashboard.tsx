@@ -31,7 +31,7 @@ const AdminDashboard = () => {
             const response = await axios.get(`${API_URL}/api/admin`, {
               headers: {
                 'Content-Type': 'application/json',
-                Authorization: `JWT ${token}`,
+                'x-access-token': token,
               },
             });
 
