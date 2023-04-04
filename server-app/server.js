@@ -38,7 +38,7 @@ app.use(express.static(path.join(__dirname, 'client-app', 'build')));
 app.get('/', (req, res) => {});
 app.use(
   cors({
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'https://kingsley.github.io'],
     credentials: true,
     methods: ['GET', 'POST', 'PATCH'],
     allowedHeaders: [
@@ -69,10 +69,10 @@ app.use(helmet.referrerPolicy());
 app.use(helmet.xssFilter());
 
 const pool = new Pool({
-  user: 'dbadmin',
+  user: process.env.DB_USER,
   host: 'localhost',
   database: 'messaging_app',
-  password: 'password',
+  password: process.env.DB_PASSWORD,
   port: 5432,
 });
 
