@@ -33,9 +33,11 @@ function App() {
     setShowBanner(false);
     // Do something else here if the user declines cookies
   };
+  const basename =
+    process.env.NODE_ENV === 'production' ? '/EECS4481-Project-T5' : '';
 
   return (
-    <Router>
+    <Router basename={basename}>
       <Header />
       <div className="content">
         <Routes>
