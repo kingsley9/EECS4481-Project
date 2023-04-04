@@ -189,6 +189,7 @@ app.post('/api/user/message', upload.single('file'), async (req, res) => {
     userType = 'admin';
   }
 
+  console.log(`Message from ${userType} on session: ${sessionId}`);
   const filename = req.file ? req.file.filename : null;
   const originalFilename = req.file ? req.file.originalname : null;
   const fileType = req.file ? req.file.mimetype : null;
