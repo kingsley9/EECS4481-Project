@@ -24,8 +24,5 @@ CREATE TABLE user_messages (
   sender senderType NOT NULL,
   message TEXT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  filename VARCHAR(255),
-  original_filename VARCHAR(255),
-  filetype VARCHAR(255),
   FOREIGN KEY (session) REFERENCES sessions(id)
 );

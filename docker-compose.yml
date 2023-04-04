@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: dbadmin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: messaging_app
+    volumes:
+      - server-data:/var/lib/postgresql/data
+      - ./server-app/sql/1-create-tables.sql:/docker-entrypoint-initdb.d/1-create-tables.sql
+      - ./server-app/sql/2-admins.sql:/docker-entrypoint-initdb.d/2-admins.sql
+      - ./server-app/sql/3-admin-messages.sql:/docker-entrypoint-initdb.d/3-admin-messages.sql
+    ports:
+      - 5543:5432
+
+  server:
+    build: ./server-app/
+    image: helpdesk-server
+    container_name: server-container
+    depends_on:
+      - db
+    ports:
+      - 3100:3100
+    environment:
+      PGUSER: dbadmin
+      PGPASSWORD: password
+      PGHOST: db
+      PGPORT: 5543
+      PGDATABASE: messaging_app
+      JWT_SECRET: secret
+
+volumes:
+  server-data:
+
