@@ -141,11 +141,11 @@ const auth = async (req, res, next) => {
 };
 
 const optionalAuth = async (req, res, next) => {
-  const token = req.headers['x-access-token'];
-  if (token) {
+  if (req.headers['x-access-token']) {
     try {
+      const token = req.headers['x-access-token'];
       const isValid = await verifyToken(token);
-      
+
       if (isValid) {
         req.token = jwt_decode(token);
         next();
@@ -155,8 +155,11 @@ const optionalAuth = async (req, res, next) => {
     } catch (error) {
       return res.status(403).send({ messgage: 'Internal server error' });
     }
+  } else {
+    next();
   }
 };
+
 
 app.get('/api/admin/verify', auth, (req, res) => {
   res.status(200).send({ isValid: true });
