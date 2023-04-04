@@ -1,0 +1,8 @@
+{
+    "type": "module",
+    "main": "./server-app/server.js",
+    "exports": {
+        "server": "./server-app/",
+        "client": "./client-app/"
+    }
+}
