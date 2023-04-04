@@ -6,31 +6,15 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json to the app directory
 COPY package.json ./
-RUN mkdir -p /uploads
 
 # Install app dependencies
-RUN npm install
+RUN npm run buildinstall
 
 # Copy the rest of the application files
 COPY . .
 
 # Expose the application port
-EXPOSE 3100
-
-# Set environment variables
-ARG DB_USER
-ARG DB_PASSWORD
-ARG DB_HOST
-ARG DB_PORT
-ARG DB_DATABASE
-ARG JWT_SECRET
-
-ENV PGUSER=$DB_USER
-ENV PGPASSWORD=$DB_PASSWORD
-ENV PGHOST=$DB_HOST
-ENV PGPORT=$DB_PORT
-ENV PGDATABASE=$DB_DATABASE
-ENV JWT_SECRET=$JWT_SECRET
+EXPOSE 3000
 
 # Start the server
 CMD ["npm", "start"]

@@ -2,43 +2,34 @@ import React, { useEffect, useState } from 'react';
 import Messages from './messages';
 import ChatInput from './chat-input';
 import { Message } from '../data/message';
-import { getMessages, sendMessage, downloadFile } from '../services/user-message';
-import './chat-box.css';
+import { getAdminMessages, sendAdminMessage, downloadAdminFile } from '../services/admin-message';
+import './chat-box-admin.css';
 
 interface Props {
-  sessionId: string;
-  token?: string;
+  token: string;
+  adminId: number;
   role: string;
 }
 
-const ChatBox: React.FC<Props> = (props) => {
+const AdminChatBox: React.FC<Props> = (props) => {
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     const fetchMessages = async () => {
-      const messages = await getMessages(props.sessionId);
+      const messages = await getAdminMessages(props.token, props.adminId);
       setMessages(messages);
     };
     fetchMessages();
-  }, [props.sessionId]);
+  }, [props.adminId, props.token]);
 
   const handleSend = async (text: string, file?: File) => {
-    if (props.token) {
-      await sendMessage(text, props.sessionId, props.token, file);
-    } else {
-      await sendMessage(text, props.sessionId, undefined, file);
-    }
-
-    const updatedMessages = await getMessages(props.sessionId);
+    await sendAdminMessage(text, props.token, props.adminId, file);
+    const updatedMessages = await getAdminMessages(props.token, props.adminId);
     setMessages(updatedMessages);
   };
 
   const handleFileDownload = async (fileId: string, fileName: string) => {
-    if (props.token) {
-      await downloadFile(fileId, fileName, props.sessionId, props.token);
-    } else {
-      await downloadFile(fileId, fileName, props.sessionId);
-    }
+    await downloadAdminFile(fileId, fileName, props.token);
   };
 
   return (
@@ -56,4 +47,4 @@ const ChatBox: React.FC<Props> = (props) => {
   );
 };
 
-export default ChatBox;
+export default AdminChatBox;

@@ -8,6 +8,7 @@ import Footer from './components/common/footer';
 import Login from './pages/admin/login';
 import Dashboard from './pages/dashboard/dashboard';
 import AdminDashboard from './pages/admin/admin-dashboard';
+import AdminChat from './pages/admin/admin-chat';
 
 function App() {
   const basename =
@@ -23,6 +24,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/admin/login" element={<Login />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/chat" element={<AdminChat />} />
         </Routes>
       </div>
       <Footer />

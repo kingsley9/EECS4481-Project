@@ -37,7 +37,7 @@ const upload = multer({
 app.get('/', (req, res) => {});
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'https://kingsley.github.io'],
+    origin: ['http://localhost:3000', 'https://kingsley.github.io','http://35.232.92.79:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PATCH'],
     allowedHeaders: [
@@ -49,8 +49,6 @@ app.use(
     ],
   })
 );
-
-app.options('*', cors());
 
 app.use(helmet.crossOriginEmbedderPolicy());
 app.use(helmet.crossOriginOpenerPolicy());
@@ -70,11 +68,11 @@ app.use(helmet.referrerPolicy());
 app.use(helmet.xssFilter());
 
 const pool = new Pool({
-  user: 'dbadmin',
-  host: 'localhost',
-  database: 'messaging_app',
-  password: 'password',
-  port: 5432,
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  port: process.env.PGPORT,
 });
 
 app.use(bodyParser.json());
@@ -84,7 +82,7 @@ const secret = process.env.JWT_SECRET;
 
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
-
+  
   pool.query(
     'SELECT * FROM admins WHERE username = $1 AND password = $2',
     [username, password],
@@ -107,39 +105,72 @@ app.post('/api/admin/login', (req, res) => {
   );
 });
 
-const auth = (req, res, next) => {
-  const token =
-    req.headers.authorization && req.headers.authorization.split(' ')[1];
-  if (!token) {
-    return res.status(401).send('Unauthorized request');
-  }
-  jwt.verify(token, secret, (err, decoded) => {
-    if (err) {
-      return res.status(401).send('Unauthorized request');
-    }
+const verifyToken = (token) => {
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, secret, (err, decoded) => {
+      if (err) {
+        return reject(false);
+      }
 
-    if (decoded.role !== 'admin') {
-      return res.status(403).send('Forbidden');
-    }
-
-    req.admin = decoded.username;
-    next();
+      if (decoded.role !== 'admin') {
+        return reject(false);
+      }
+      
+      return resolve(true);
+    });
   });
 };
+
+const auth = async (req, res, next) => {
+  const token = req.headers['x-access-token'];
+  if (!token) {
+    return res.status(401).send({ messgage: 'Unauthorized request' });
+  }
+  try {
+    const isValid = await verifyToken(token);
+    
+    if (isValid) {
+      req.token = jwt_decode(token);
+      next();
+    } else {
+      return res.status(403).send({ messgage: 'Request forbidden' });
+    }
+  } catch (error) {
+    return res.status(403).send({ messgage: 'Request forbidden' });
+  }
+};
+
+const optionalAuth = async (req, res, next) => {
+  if (req.headers['x-access-token']) {
+    try {
+      const token = req.headers['x-access-token'];
+      const isValid = await verifyToken(token);
+
+      if (isValid) {
+        req.token = jwt_decode(token);
+        next();
+      } else {
+        next();
+      }
+    } catch (error) {
+      return res.status(403).send({ messgage: 'Internal server error' });
+    }
+  } else {
+    next();
+  }
+};
+
 
 app.get('/api/admin/verify', auth, (req, res) => {
   res.status(200).send({ isValid: true });
 });
 
 app.get('/api/admin', auth, (req, res) => {
-  res.status(200).send({ message: `Welcome ${req.admin}` });
+  res.status(200).send({ message: `Welcome ${req.token.username}` });
 });
 
 app.get('/api/admin/sessions', auth, async (req, res) => {
-  const token =
-    req.headers.authorization && req.headers.authorization.split(' ')[1];
-  const decoded = jwt_decode(token);
-  const adminId = decoded.adminId;
+  const adminId = req.token.adminId;
   const { rows } = await pool.query(
     'SELECT id FROM sessions WHERE adminid = $1',
     [adminId]
@@ -163,28 +194,24 @@ app.post('/api/session', async (req, res) => {
     id,
     adminId,
   ]);
+  console.log(`Session id [${id}] created for admin id: ${adminId}`);
   res.send({ sessionId: id });
 });
 
-app.post('/api/user/message', upload.single('file'), async (req, res) => {
+app.post('/api/user/message', optionalAuth, upload.single('file'), async (req, res) => {
   const sessionId = req.headers.sessionid;
-  const message = req.headers['x-message-content'];
-  const token = req.headers['x-access-token'] | null;
+  const message = req.headers["x-message-content"];
+
+
   let userType = 'user';
+
+  const token = req.token;
   if (token) {
-    jwt.verify(token, secret, (err, decoded) => {
-      if (err) {
-        return res.status(401).send('Unauthorized request');
-      }
-
-      if (decoded.role !== 'admin') {
-        return res.status(403).send('Forbidden');
-      }
-
-      userType = decoded.role;
-    });
+    const adminUsername = token.username;
+    userType = 'admin';
   }
 
+  console.log(`Message from ${userType} on session: ${sessionId}`);
   const filename = req.file ? req.file.filename : null;
   const originalFilename = req.file ? req.file.originalname : null;
   const fileType = req.file ? req.file.mimetype : null;
@@ -195,24 +222,15 @@ app.post('/api/user/message', upload.single('file'), async (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/api/user/file/:fileid', async (req, res) => {
+app.get('/api/user/file/:fileid', optionalAuth, async (req, res) => {
   const fileId = req.params.fileid;
   const sessionId = req.headers.sessionid;
-  const token = req.headers['x-access-token'] | null;
   let userType = 'user';
   try {
+    const token = req.token;
     if (token) {
-      jwt.verify(token, secret, (err, decoded) => {
-        if (err) {
-          return res.status(401).send('Unauthorized request');
-        }
-
-        if (decoded.role !== 'admin') {
-          return res.status(403).send('Forbidden');
-        }
-
-        userType = decoded.role;
-      });
+      const adminUsername = token.username;
+      userType = 'admin';
     }
 
     // Retrieve the file path and original filename from the database
@@ -221,7 +239,7 @@ app.get('/api/user/file/:fileid', async (req, res) => {
       [fileId, sessionId]
     );
     const filePath = rows[0]?.filename;
-    const fileType = rows[0]?.filename;
+    const fileType = rows[0]?.file_type;
     const session = rows[0]?.session;
     if (
       (filePath && userType === 'admin') ||
@@ -246,7 +264,7 @@ app.get('/api/user/file/:fileid', async (req, res) => {
   }
 });
 
-app.get('/api/messages', async (req, res) => {
+app.get('/api/messages', optionalAuth, async (req, res) => {
   const sessionId = req.headers.sessionid;
   if (sessionId != '') {
     const { rows } = await pool.query(
@@ -289,14 +307,94 @@ app.patch('/api/user/update', auth, async (req, res) => {
   }
 });
 
-app.post('/api/admin/message', auth, async (req, res) => {
-  const sessionId = req.headers.sessionid;
-  const { message, token } = req.body;
-  await pool.query(
-    'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
-    ['admin', message, sessionId]
-  );
-  res.sendStatus(200);
+
+app.post('/api/admin/message/:adminId', auth, upload.single('file'), async (req, res) => {
+  try {
+    const recipientId = req.params.adminId;
+    const senderId = req.token.adminId;
+    const message = req.headers["x-message-content"];
+
+    const filename = req.file ? req.file.filename : null;
+    const original_filename = req.file ? req.file.originalname : null;
+    const file_type = req.file ? req.file.mimetype : null;
+    await pool.query(
+      'INSERT INTO admin_messages (sender, recipient, message, filename, original_filename, file_type) VALUES ($1, $2, $3, $4, $5, $6)',
+      [senderId, recipientId, message, filename, original_filename, file_type]
+    );
+    res.sendStatus(200);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+app.get('/api/admin/file/:fileid', auth, async (req, res) => {
+  const fileId = req.params.fileid;
+  try {
+    const token = req.token;
+    const adminUsername = token.username;
+    const adminId = token.adminId;
+
+    // Retrieve the file path and original filename from the database
+    const { rows } = await pool.query(
+      'SELECT filename, file_type FROM admin_messages WHERE filename = $1 AND (sender = $2 OR recipient = $2)',
+      [fileId, adminId]
+    );
+
+    if (rows.length > 0) {
+      const filePath = rows[0]?.filename;
+      const fileType = rows[0]?.file_type;
+      const file = path.join(__dirname, '..', 'uploads', filePath);
+      res.type(fileType);
+      res.status(200).sendFile(file, function (err) {
+        if (err) {
+          console.error(err);
+          res.status(500).send('Internal server error');
+        } else {
+          console.log('Sent:', filePath);
+        }
+      });
+    } else {
+      return res.status(403).send({ message: 'Forbidden'});
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+app.get('/api/admin/messages/:adminId', auth, async (req, res) => {
+  const recipientId = req.params.adminId;
+  try {
+    const senderId = req.token.adminId;
+
+    const { rows } = await pool.query(
+      'SELECT * FROM admin_messages WHERE (sender = $1 AND recipient = $2) OR (sender = $2 AND recipient = $1)',
+      [senderId, recipientId]
+    );
+    const messages = rows.map((message) => {
+      const files = [];
+      if (message.filename && message.original_filename && message.file_type) {
+        files.push({
+          filename: message.original_filename,
+          fileId: message.filename,
+          fileType: message.file_type,
+        });
+      }
+      return {
+        id: message.id,
+        sender: message.sender == senderId ? 'user' : 'admin',
+        message: message.message,
+        session: null,
+        timestamp: message.created_at,
+        files,
+      };
+    });
+    res.send(messages);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.listen(3100);

@@ -31,7 +31,7 @@ const AdminDashboard = () => {
             const response = await axios.get(`${API_URL}/api/admin`, {
               headers: {
                 'Content-Type': 'application/json',
-                Authorization: `JWT ${token}`,
+                'x-access-token': token,
               },
             });
 
@@ -72,6 +72,10 @@ const AdminDashboard = () => {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleAdminChat = () => {
+    navigate('/admin/chat');
   };
 
   const handleConversationClick = (sessionId: string) => {
@@ -130,9 +134,12 @@ const AdminDashboard = () => {
           </div>
         </div>
         <div className="admin-content">
-          <ChatBox sessionId={sessionId} token={token} role="admin" />
+          {sessionId ? <ChatBox sessionId={sessionId} token={token} role="admin" /> : <p>No active conversations</p>}
         </div>
       </div>
+      <button className="home-button " onClick={handleAdminChat}>
+        Admin Chat
+      </button>
     </div>
   );
 };

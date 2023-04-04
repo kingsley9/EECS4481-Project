@@ -1,0 +1,16 @@
+.chat-area {
+  min-width: 40rem;
+  width: 80%;
+  border: 1px solid #bfbfbf;
+  background-color: white;
+  padding: 20px;
+  overflow-y: auto;
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 55%; /* Set the height of the chat-area to 70% of the dashboard */
+}

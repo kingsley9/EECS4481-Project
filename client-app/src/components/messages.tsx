@@ -6,12 +6,11 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons';
 
 interface Props {
   messages: Message[];
-  currentUser: string;
   role: string;
   onFileDownload: (fileId: string, fileName: string) => void;
 }
 
-const Messages: React.FC<Props> = ({ messages, currentUser, role, onFileDownload }) => {
+const Messages: React.FC<Props> = ({ messages, role, onFileDownload }) => {
   return (
     <div className="messages-container">
       {messages.map((message: Message) => (

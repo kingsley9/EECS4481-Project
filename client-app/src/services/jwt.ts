@@ -2,14 +2,14 @@ import { removeCookie } from '../utils/cookie';
 import { API_URL } from '../config/default';
 import axios from 'axios';
 
-export const verifyToken = async (token = ''): Promise<boolean> => {
+export const verifyToken = async (token?: string | null): Promise<boolean> => {
   if (token === '') return false;
 
   try {
     const response = await axios.get(`${API_URL}/api/admin/verify`, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `JWT ${token}`,
+        ...(token && { 'x-access-token': token }),
       },
     });
 
