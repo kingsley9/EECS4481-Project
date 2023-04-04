@@ -10,6 +10,7 @@ CREATE TABLE admins (
 -- Create sessions table
 CREATE TABLE sessions (
   id UUID PRIMARY KEY NOT NULL,
+  name VARCHAR(255),
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   adminid INTEGER NOT NULL,

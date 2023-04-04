@@ -9,7 +9,7 @@ export const verifyToken = async (token = ''): Promise<boolean> => {
     const response = await axios.get(`${API_URL}/api/admin/verify`, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `JWT ${token}`,
+        ...(token && { 'x-access-token': token }),
       },
     });
 

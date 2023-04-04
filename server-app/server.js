@@ -43,8 +43,6 @@ app.use(
   })
 );
 
-app.options('*', cors());
-
 app.use(helmet.crossOriginEmbedderPolicy());
 app.use(helmet.crossOriginOpenerPolicy());
 app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
@@ -100,24 +98,32 @@ app.post('/api/admin/login', (req, res) => {
   );
 });
 
-const auth = (req, res, next) => {
-  const token =
-    req.headers.authorization && req.headers.authorization.split(' ')[1];
-  if (!token) {
-    return res.status(401).send('Unauthorized request');
-  }
+const verifyToken = (token) => {
   jwt.verify(token, secret, (err, decoded) => {
     if (err) {
-      return res.status(401).send('Unauthorized request');
+      return false;
     }
 
     if (decoded.role !== 'admin') {
-      return res.status(403).send('Forbidden');
+      return false;
     }
 
-    req.admin = decoded.username;
-    next();
+    return true;
   });
+};
+
+const auth = (req, res, next) => {
+  const token = req.headers['x-access-token'] | null;
+  console.log(token);
+  if (!token) {
+    return res.status(401).send('Unauthorized request');
+  }
+
+  if (verifyToken(token)) {
+    req.token = jwt_decode(token);
+  } else {
+    return res.status(403).send('Request forbidden');
+  }
 };
 
 app.get('/api/admin/verify', auth, (req, res) => {
@@ -125,7 +131,7 @@ app.get('/api/admin/verify', auth, (req, res) => {
 });
 
 app.get('/api/admin', auth, (req, res) => {
-  res.status(200).send({ message: `Welcome ${req.admin}` });
+  res.status(200).send({ message: `Welcome ${req.token.username}` });
 });
 
 app.get('/api/admin/sessions', auth, async (req, res) => {
@@ -162,20 +168,11 @@ app.post('/api/session', async (req, res) => {
 app.post('/api/user/message', upload.single('file'), async (req, res) => {
   const sessionId = req.headers.sessionid;
   const message = req.headers["x-message-content"];
-  const token = req.headers["x-access-token"] | null;
+  const token = req.token;
   let userType = 'user';
   if (token) {
-    jwt.verify(token, secret, (err, decoded) => {
-      if (err) {
-        return res.status(401).send('Unauthorized request');
-      }
-
-      if (decoded.role !== 'admin') {
-        return res.status(403).send('Forbidden');
-      }
-
-      userType = decoded.role;
-    });
+    const adminUsername = token.username;
+    userType = 'admin';
   }
 
   const filename = req.file ? req.file.filename : null;
@@ -195,17 +192,8 @@ app.get('/api/user/file/:fileid', async (req, res) => {
   let userType = 'user';
   try {
     if (token) {
-      jwt.verify(token, secret, (err, decoded) => {
-        if (err) {
-          return res.status(401).send('Unauthorized request');
-        }
-  
-        if (decoded.role !== 'admin') {
-          return res.status(403).send('Forbidden');
-        }
-  
-        userType = decoded.role;
-      });
+      const adminUsername = verifyUser(token);
+      if (adminUsername) userType = 'admin';
     }
   
     // Retrieve the file path and original filename from the database
@@ -280,9 +268,11 @@ app.patch('/api/user/update', auth, async (req, res) => {
 });
 
 
-app.post('/api/admin/message', auth, async (req, res) => {
-  const sessionId = req.headers.sessionid;
-  const { message, token } = req.body;
+app.post('/api/admin/message/:adminId', auth, async (req, res) => {
+  const recipientId = req.params.adminId;
+  const token = req.headers['x-access-token'] | null;
+  const senderId = verifyUser(token);
+  const { message } = req.body;
   await pool.query(
     'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
     ['admin', message, sessionId]
