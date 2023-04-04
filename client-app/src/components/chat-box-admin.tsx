@@ -20,6 +20,11 @@ const AdminChatBox: React.FC<Props> = (props) => {
       setMessages(messages);
     };
     fetchMessages();
+    const interval = setInterval(() => {
+      fetchMessages();
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [props.adminId, props.token]);
 
   const handleSend = async (text: string, file?: File) => {
