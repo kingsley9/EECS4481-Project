@@ -5,7 +5,7 @@ export const getAdmins = async (token = '') => {
   const response = await axios.get(`${API_URL}/api/admin/list`, {
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { 'x-access-token': token }),
+      'x-access-token': token,
     },
   });
   return response.data;

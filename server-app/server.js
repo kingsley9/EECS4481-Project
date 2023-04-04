@@ -37,7 +37,7 @@ const upload = multer({
 app.get('/', (req, res) => {});
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'https://kingsley.github.io'],
+    origin: ['http://localhost:3000', 'https://kingsley.github.io','http://35.232.92.79:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PATCH'],
     allowedHeaders: [
@@ -68,11 +68,11 @@ app.use(helmet.referrerPolicy());
 app.use(helmet.xssFilter());
 
 const pool = new Pool({
-  user: 'dbadmin',
-  host: 'localhost',
-  database: 'messaging_app',
-  password: 'password',
-  port: 5432,
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  port: process.env.PGPORT,
 });
 
 app.use(bodyParser.json());
@@ -82,7 +82,7 @@ const secret = process.env.JWT_SECRET;
 
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
-
+  
   pool.query(
     'SELECT * FROM admins WHERE username = $1 AND password = $2',
     [username, password],
@@ -97,6 +97,7 @@ app.post('/api/admin/login', (req, res) => {
           role: 'admin',
         };
         const token = jwt.sign(admin, secret, { expiresIn: '1h' });
+        console.log({token});
         res.status(200).send({ token });
       } else {
         res.status(401).send('Invalid username or password');
@@ -106,30 +107,37 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 const verifyToken = (token) => {
-  jwt.verify(token, secret, (err, decoded) => {
-    if (err) {
-      return false;
-    }
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, secret, (err, decoded) => {
+      if (err) {
+        return reject(false);
+      }
 
-    if (decoded.role !== 'admin') {
-      return false;
-    }
-
-    return true;
+      if (decoded.role !== 'admin') {
+        return reject(false);
+      }
+      
+      return resolve(true);
+    });
   });
 };
 
-const auth = (req, res, next) => {
-  const token = req.headers['x-access-token'] | null;
-  console.log(token);
+const auth = async (req, res, next) => {
+  const token = req.headers['x-access-token'];
   if (!token) {
-    return res.status(401).send('Unauthorized request');
+    return res.status(401).send({ messgage: 'Unauthorized request' });
   }
-
-  if (verifyToken(token)) {
-    req.token = jwt_decode(token);
-  } else {
-    return res.status(403).send('Request forbidden');
+  try {
+    const isValid = await verifyToken(token);
+    console.log(isValid);
+    if (isValid) {
+      req.token = jwt_decode(token);
+      next();
+    } else {
+      return res.status(403).send({ messgage: 'Request forbidden' });
+    }
+  } catch (error) {
+    return res.status(403).send({ messgage: 'Request forbidden' });
   }
 };
 

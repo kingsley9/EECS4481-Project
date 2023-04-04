@@ -41,7 +41,7 @@ nvm install
 nvm use
 ```
 3. Install list of required dependencies: `npm i`
-4. Run the server: `npm start`
+4. Run the server: `PGUSER="dbadmin" PGHOST="127.0.0.1" PGDATABASE="messaging_app" PGPASSWORD="password" PGPORT="5432" JWT_SECRET="password" npm start`
 
 
 ## Git Flow for changes

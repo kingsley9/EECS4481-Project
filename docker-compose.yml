@@ -29,7 +29,7 @@ services:
       PGUSER: dbadmin
       PGPASSWORD: password
       PGHOST: db
-      PGPORT: 5543
+      PGPORT: 5432
       PGDATABASE: messaging_app
       JWT_SECRET: secret
 
