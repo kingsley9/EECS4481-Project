@@ -142,9 +142,6 @@ const auth = async (req, res, next) => {
 
 const optionalAuth = async (req, res, next) => {
   const token = req.headers['x-access-token'];
-  if (!token) {
-    return res.status(401).send({ messgage: 'Unauthorized request' });
-  }
   try {
     const isValid = await verifyToken(token);
     
