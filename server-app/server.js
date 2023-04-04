@@ -140,6 +140,24 @@ const auth = async (req, res, next) => {
   }
 };
 
+const optionalAuth = async (req, res, next) => {
+  const token = req.headers['x-access-token'];
+  if (!token) {
+    return res.status(401).send({ messgage: 'Unauthorized request' });
+  }
+  try {
+    const isValid = await verifyToken(token);
+    
+    if (isValid) {
+      req.token = jwt_decode(token);
+      next();
+    }
+    next();
+  } catch (error) {
+    return res.status(403).send({ messgage: 'Internal server error' });
+  }
+};
+
 app.get('/api/admin/verify', auth, (req, res) => {
   res.status(200).send({ isValid: true });
 });
@@ -177,7 +195,7 @@ app.post('/api/session', async (req, res) => {
   res.send({ sessionId: id });
 });
 
-app.post('/api/user/message', upload.single('file'), async (req, res) => {
+app.post('/api/user/message', optionalAuth, upload.single('file'), async (req, res) => {
   const sessionId = req.headers.sessionid;
   const message = req.headers["x-message-content"];
 
@@ -200,7 +218,7 @@ app.post('/api/user/message', upload.single('file'), async (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/api/user/file/:fileid', async (req, res) => {
+app.get('/api/user/file/:fileid', optionalAuth, async (req, res) => {
   const fileId = req.params.fileid;
   const sessionId = req.headers.sessionid;
   let userType = 'user';
@@ -242,7 +260,7 @@ app.get('/api/user/file/:fileid', async (req, res) => {
   }
 });
 
-app.get('/api/messages', async (req, res) => {
+app.get('/api/messages', optionalAuth, async (req, res) => {
   const sessionId = req.headers.sessionid;
   if (sessionId != '') {
     const { rows } = await pool.query(
