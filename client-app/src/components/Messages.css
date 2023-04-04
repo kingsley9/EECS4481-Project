@@ -1,13 +1,14 @@
 .messages-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
+  height: 400px;
+  padding: 30px 0;
   overflow: scroll;
-  height: 75vh;
-  padding-top: 30px;
   overflow-y: auto;
 }
 
 .message {
+  align-items: flex-end;
   margin: 10px;
   padding: 8px;
   border-radius: 8px;
