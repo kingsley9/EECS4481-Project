@@ -25,7 +25,7 @@
   transition: background-color 0.2s ease;
 }
 
-.home-container {
+.admin-dashboard-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -34,14 +34,14 @@
   width: 100%;
 }
 
-.home-buttons-container {
+.admin-buttons-container {
   display: flex;
   flex-direction: row;
   justify-content: center;
   margin-top: 50px;
 }
 
-.home-button {
+.admin-home-button {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -61,10 +61,6 @@
   transition: all 0.3s ease;
 }
 
-.home-button:hover {
-  background-color: #005F73;
-  box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.5);
-}
 
 .admin-panel {
   width: 40%;

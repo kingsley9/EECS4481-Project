@@ -145,3 +145,8 @@ body {
   .chat-input-icon:hover {
     cursor: pointer;
   }
+  .content{
+    
+    width:1000px;
+    margin: 0 auto;
+  }

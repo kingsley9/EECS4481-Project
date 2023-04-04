@@ -89,10 +89,14 @@ const AdminChat = () => {
           </ul>
         </div>
         <div className="admin-content">
-          {adminId ? <AdminChatBox adminId={adminId} token={token} role='user' /> : <p>No active conversations</p>}
+          {adminId ? (
+            <AdminChatBox adminId={adminId} token={token} role="user" />
+          ) : (
+            <p>No active conversations</p>
+          )}
         </div>
       </div>
-      <button className="home-button " onClick={handleAdminDashboard}>
+      <button className="admin-chat-button " onClick={handleAdminDashboard}>
         Admin Dashboard
       </button>
     </div>
