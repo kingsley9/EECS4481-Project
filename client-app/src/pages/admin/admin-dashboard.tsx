@@ -130,7 +130,7 @@ const AdminDashboard = () => {
           </div>
         </div>
         <div className="admin-content">
-          <ChatBox sessionId={sessionId} token={token} role="admin" />
+          {sessionId ? <ChatBox sessionId={sessionId} token={token} role="admin" /> : <p>No active conversations</p>}
         </div>
       </div>
     </div>
