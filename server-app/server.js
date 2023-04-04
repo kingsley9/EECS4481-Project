@@ -97,7 +97,6 @@ app.post('/api/admin/login', (req, res) => {
           role: 'admin',
         };
         const token = jwt.sign(admin, secret, { expiresIn: '1h' });
-        console.log({token});
         res.status(200).send({ token });
       } else {
         res.status(401).send('Invalid username or password');
