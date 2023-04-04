@@ -33,7 +33,6 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024, // 100 MB in bytes
   },
 });
-app.use(express.static(path.join(__dirname, 'client-app', 'build')));
 
 app.get('/', (req, res) => {});
 app.use(
@@ -298,11 +297,6 @@ app.post('/api/admin/message', auth, async (req, res) => {
     ['admin', message, sessionId]
   );
   res.sendStatus(200);
-});
-
-// Routes
-app.get('/', function (req, res) {
-  res.sendFile(path.join(__dirname, 'client-app', 'build', 'index.html'));
 });
 
 app.listen(3100);
