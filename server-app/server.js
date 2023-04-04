@@ -151,8 +151,9 @@ const optionalAuth = async (req, res, next) => {
     if (isValid) {
       req.token = jwt_decode(token);
       next();
+    } else {
+      next();
     }
-    next();
   } catch (error) {
     return res.status(403).send({ messgage: 'Internal server error' });
   }
