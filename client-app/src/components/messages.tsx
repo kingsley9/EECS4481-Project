@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import './Messages.css';
 import { Message } from '../data/message';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -11,6 +11,16 @@ interface Props {
 }
 
 const Messages: React.FC<Props> = ({ messages, role, onFileDownload }) => {
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   return (
     <div className="messages-container">
       {messages.map((message: Message) => (
@@ -20,34 +30,36 @@ const Messages: React.FC<Props> = ({ messages, role, onFileDownload }) => {
         >
           <span>{message.sender}:&nbsp;</span>
           <span>{message.message}</span>
-          {message.files && message.files.map((file) => (
-            <div key={file.fileId} className="file-container">
-              {file.fileType.startsWith('image') ? (
-                <img
-                  className="file-image"
-                  src={`/api/user/file/${file.fileId}`}
-                  alt={file.filename}
-                />
-              ) : (
-                <div className="file-image file-icon">
-                  <span className="file-extension">
-                    {file.fileType.split('/')[1]}
-                  </span>
+          {message.files &&
+            message.files.map((file) => (
+              <div key={file.fileId} className="file-container">
+                {file.fileType.startsWith('image') ? (
+                  <img
+                    className="file-image"
+                    src={`/api/user/file/${file.fileId}`}
+                    alt={file.filename}
+                  />
+                ) : (
+                  <div className="file-image file-icon">
+                    <span className="file-extension">
+                      {file.fileType.split('/')[1]}
+                    </span>
+                  </div>
+                )}
+                <div className="file-details">
+                  <span className="file-name">{file.filename}</span>
+                  <button
+                    className="file-download"
+                    onClick={() => onFileDownload(file.fileId, file.filename)}
+                  >
+                    <FontAwesomeIcon icon={faDownload} />
+                  </button>
                 </div>
-              )}
-              <div className="file-details">
-                <span className="file-name">{file.filename}</span>
-                <button
-                  className="file-download"
-                  onClick={() => onFileDownload(file.fileId, file.filename)}
-                >
-                  <FontAwesomeIcon icon={faDownload} />
-                </button>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       ))}
+      <div ref={messagesEndRef} />
     </div>
   );
 };
