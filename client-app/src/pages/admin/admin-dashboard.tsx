@@ -74,6 +74,10 @@ const AdminDashboard = () => {
     navigate('/');
   };
 
+  const handleAdminChat = () => {
+    navigate('/admin/chat');
+  };
+
   const handleConversationClick = (sessionId: string) => {
     setSessionId(sessionId);
   };
@@ -133,6 +137,9 @@ const AdminDashboard = () => {
           {sessionId ? <ChatBox sessionId={sessionId} token={token} role="admin" /> : <p>No active conversations</p>}
         </div>
       </div>
+      <button className="home-button " onClick={handleAdminChat}>
+        Admin Chat
+      </button>
     </div>
   );
 };

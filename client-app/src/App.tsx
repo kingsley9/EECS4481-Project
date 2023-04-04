@@ -9,7 +9,9 @@ import CookieOptIn from './components/common/cookieOptIn';
 import Login from './pages/admin/login';
 import Dashboard from './pages/dashboard/dashboard';
 import AdminDashboard from './pages/admin/admin-dashboard';
+
 import Cookies from 'js-cookie';
+import AdminChat from './pages/admin/admin-chat';
 
 function App() {
   const [showBanner, setShowBanner] = useState(false);
@@ -45,6 +47,9 @@ function App() {
           {!showBanner && (
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
           )}
+          <Route path="/admin/login" element={<Login />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/chat" element={<AdminChat />} />
         </Routes>
       </div>
 

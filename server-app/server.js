@@ -238,7 +238,7 @@ app.get('/api/user/file/:fileid', optionalAuth, async (req, res) => {
       [fileId, sessionId]
     );
     const filePath = rows[0]?.filename;
-    const fileType = rows[0]?.filename;
+    const fileType = rows[0]?.file_type;
     const session = rows[0]?.session;
     if (
       (filePath && userType === 'admin') ||
@@ -306,16 +306,93 @@ app.patch('/api/user/update', auth, async (req, res) => {
   }
 });
 
-app.post('/api/admin/message/:adminId', auth, async (req, res) => {
+app.post('/api/admin/message/:adminId', auth, upload.single('file'), async (req, res) => {
+  try {
+    const recipientId = req.params.adminId;
+    const senderId = req.token.adminId;
+    const message = req.headers["x-message-content"];
+
+    const filename = req.file ? req.file.filename : null;
+    const original_filename = req.file ? req.file.originalname : null;
+    const file_type = req.file ? req.file.mimetype : null;
+    await pool.query(
+      'INSERT INTO admin_messages (sender, recipient, message, filename, original_filename, file_type) VALUES ($1, $2, $3, $4, $5, $6)',
+      [senderId, recipientId, message, filename, original_filename, file_type]
+    );
+    res.sendStatus(200);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+app.get('/api/admin/file/:fileid', auth, async (req, res) => {
+  const fileId = req.params.fileid;
+  try {
+    const token = req.token;
+    const adminUsername = token.username;
+    const adminId = token.adminId;
+
+    // Retrieve the file path and original filename from the database
+    const { rows } = await pool.query(
+      'SELECT filename, file_type FROM admin_messages WHERE filename = $1 AND (sender = $2 OR recipient = $2)',
+      [fileId, adminId]
+    );
+
+    if (rows.length > 0) {
+      const filePath = rows[0]?.filename;
+      const fileType = rows[0]?.file_type;
+      const file = path.join(__dirname, '..', 'uploads', filePath);
+      res.type(fileType);
+      res.status(200).sendFile(file, function (err) {
+        if (err) {
+          console.error(err);
+          res.status(500).send('Internal server error');
+        } else {
+          console.log('Sent:', filePath);
+        }
+      });
+    } else {
+      return res.status(403).send({ message: 'Forbidden'});
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+app.get('/api/admin/messages/:adminId', auth, async (req, res) => {
   const recipientId = req.params.adminId;
-  const token = req.headers['x-access-token'] | null;
-  const senderId = verifyUser(token);
-  const { message } = req.body;
-  await pool.query(
-    'INSERT INTO user_messages (sender, message, session) VALUES ($1, $2, $3)',
-    ['admin', message, sessionId]
-  );
-  res.sendStatus(200);
+  try {
+    const senderId = req.token.adminId;
+
+    const { rows } = await pool.query(
+      'SELECT * FROM admin_messages WHERE (sender = $1 AND recipient = $2) OR (sender = $2 AND recipient = $1)',
+      [senderId, recipientId]
+    );
+    const messages = rows.map((message) => {
+      const files = [];
+      if (message.filename && message.original_filename && message.file_type) {
+        files.push({
+          filename: message.original_filename,
+          fileId: message.filename,
+          fileType: message.file_type,
+        });
+      }
+      return {
+        id: message.id,
+        sender: message.sender == senderId ? 'user' : 'admin',
+        message: message.message,
+        session: null,
+        timestamp: message.created_at,
+        files,
+      };
+    });
+    res.send(messages);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.listen(3100);
