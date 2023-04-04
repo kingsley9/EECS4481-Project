@@ -97,7 +97,6 @@ app.post('/api/admin/login', (req, res) => {
           role: 'admin',
         };
         const token = jwt.sign(admin, secret, { expiresIn: '1h' });
-        console.log({token});
         res.status(200).send({ token });
       } else {
         res.status(401).send('Invalid username or password');
@@ -141,6 +140,27 @@ const auth = async (req, res, next) => {
   }
 };
 
+const optionalAuth = async (req, res, next) => {
+  if (req.headers['x-access-token']) {
+    try {
+      const token = req.headers['x-access-token'];
+      const isValid = await verifyToken(token);
+
+      if (isValid) {
+        req.token = jwt_decode(token);
+        next();
+      } else {
+        next();
+      }
+    } catch (error) {
+      return res.status(403).send({ messgage: 'Internal server error' });
+    }
+  } else {
+    next();
+  }
+};
+
+
 app.get('/api/admin/verify', auth, (req, res) => {
   res.status(200).send({ isValid: true });
 });
@@ -174,10 +194,11 @@ app.post('/api/session', async (req, res) => {
     id,
     adminId,
   ]);
+  console.log(`Session id [${id}] created for admin id: ${adminId}`);
   res.send({ sessionId: id });
 });
 
-app.post('/api/user/message', upload.single('file'), async (req, res) => {
+app.post('/api/user/message', optionalAuth, upload.single('file'), async (req, res) => {
   const sessionId = req.headers.sessionid;
   const message = req.headers["x-message-content"];
 
@@ -189,6 +210,7 @@ app.post('/api/user/message', upload.single('file'), async (req, res) => {
     userType = 'admin';
   }
 
+  console.log(`Message from ${userType} on session: ${sessionId}`);
   const filename = req.file ? req.file.filename : null;
   const originalFilename = req.file ? req.file.originalname : null;
   const fileType = req.file ? req.file.mimetype : null;
@@ -199,7 +221,7 @@ app.post('/api/user/message', upload.single('file'), async (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/api/user/file/:fileid', async (req, res) => {
+app.get('/api/user/file/:fileid', optionalAuth, async (req, res) => {
   const fileId = req.params.fileid;
   const sessionId = req.headers.sessionid;
   let userType = 'user';
@@ -241,7 +263,7 @@ app.get('/api/user/file/:fileid', async (req, res) => {
   }
 });
 
-app.get('/api/messages', async (req, res) => {
+app.get('/api/messages', optionalAuth, async (req, res) => {
   const sessionId = req.headers.sessionid;
   if (sessionId != '') {
     const { rows } = await pool.query(
