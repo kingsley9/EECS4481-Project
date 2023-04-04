@@ -10,8 +10,11 @@ import Dashboard from './pages/dashboard/dashboard';
 import AdminDashboard from './pages/admin/admin-dashboard';
 
 function App() {
+  const basename =
+    process.env.NODE_ENV === 'production' ? '/EECS4481-Project-T5' : '';
+
   return (
-    <Router>
+    <Router basename={basename}>
       <Header />
       <div className="content">
         <Routes>
