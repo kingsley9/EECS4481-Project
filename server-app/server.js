@@ -70,10 +70,10 @@ app.use(helmet.referrerPolicy());
 app.use(helmet.xssFilter());
 
 const pool = new Pool({
-  user: process.env.DB_USER,
+  user: 'dbadmin',
   host: 'localhost',
   database: 'messaging_app',
-  password: process.env.DB_PASSWORD,
+  password: 'password',
   port: 5432,
 });
 
