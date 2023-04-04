@@ -142,17 +142,19 @@ const auth = async (req, res, next) => {
 
 const optionalAuth = async (req, res, next) => {
   const token = req.headers['x-access-token'];
-  try {
-    const isValid = await verifyToken(token);
-    
-    if (isValid) {
-      req.token = jwt_decode(token);
-      next();
-    } else {
-      next();
+  if (token) {
+    try {
+      const isValid = await verifyToken(token);
+      
+      if (isValid) {
+        req.token = jwt_decode(token);
+        next();
+      } else {
+        next();
+      }
+    } catch (error) {
+      return res.status(403).send({ messgage: 'Internal server error' });
     }
-  } catch (error) {
-    return res.status(403).send({ messgage: 'Internal server error' });
   }
 };
 
