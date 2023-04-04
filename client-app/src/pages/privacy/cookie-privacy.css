@@ -1,0 +1,43 @@
+.cookie-privacy {
+    margin: 0 auto;
+    max-width: 800px;
+    padding: 20px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  .cookie-privacy h1 {
+    margin-bottom: 20px;
+    font-size: 2em;
+    font-weight: 600;
+  }
+  
+  .cookie-privacy h2 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 1.5em;
+    font-weight: 500;
+  }
+  
+  .cookie-privacy p {
+    margin-bottom: 10px;
+  }
+  
+  .cookie-privacy ul {
+    margin-bottom: 10px;
+    padding-left: 20px;
+  }
+  
+  .cookie-privacy li {
+    margin-bottom: 5px;
+  }
+  
+  .cookie-privacy a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .cookie-privacy a:hover {
+    text-decoration: underline;
+  }
+  

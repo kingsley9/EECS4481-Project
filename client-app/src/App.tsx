@@ -9,6 +9,7 @@ import CookieOptIn from './components/common/cookieOptIn';
 import Login from './pages/admin/login';
 import Dashboard from './pages/dashboard/dashboard';
 import AdminDashboard from './pages/admin/admin-dashboard';
+import CookiePrivacy from './pages/privacy/cookie-privacy';
 
 import Cookies from 'js-cookie';
 import AdminChat from './pages/admin/admin-chat';
@@ -45,6 +46,7 @@ function App() {
 
           {!showBanner && <Route path="/dashboard" element={<Dashboard />} />}
           <Route path="/about" element={<About />} />
+          <Route path="/privacy/cookie" element={<CookiePrivacy/>} />
           {!showBanner && <Route path="/admin/login" element={<Login />} />}
           {!showBanner && (
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
