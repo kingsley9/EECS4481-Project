@@ -173,6 +173,7 @@ app.post('/api/session', async (req, res) => {
     id,
     adminId,
   ]);
+  console.log(`Session id [${id}] created for admin id: ${adminId}`);
   res.send({ sessionId: id });
 });
 
