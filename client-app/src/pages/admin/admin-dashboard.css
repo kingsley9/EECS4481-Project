@@ -67,7 +67,9 @@
 }
 
 .admin-panel {
-  width: 35%;
+  width: 40%;
+min-width:200px;
+  
   height: 30rem;
     border: 1px solid #ddd;
   border-radius: 10px 0 0 10px;
