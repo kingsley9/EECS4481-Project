@@ -11,6 +11,8 @@ const jwt = require('jsonwebtoken');
 const helmet = require('helmet');
 const jwt_decode = require('jwt-decode');
 const multer = require('multer');
+const cookieParser = require('cookie-parser');
+const csrf = require('csurf');
 const upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
@@ -34,10 +36,18 @@ const upload = multer({
   },
 });
 
-app.get('/', (req, res) => {});
+app.use(cookieParser());
+// Set up CSRF protection
+const csrfProtection = csrf({ cookie: true });
+app.use(csrfProtection);
+
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'https://kingsley.github.io','http://35.232.92.79:3000'],
+    origin: [
+      'http://localhost:3000',
+      'https://kingsley.github.io',
+      'http://35.232.92.79:3000',
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PATCH'],
     allowedHeaders: [
@@ -46,6 +56,8 @@ app.use(
       'SessionId',
       'x-access-token',
       'x-message-content',
+      'X-CSRF-Token',
+      'XSRF-Token',
     ],
   })
 );
@@ -82,7 +94,7 @@ const secret = process.env.JWT_SECRET;
 
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
-  
+
   pool.query(
     'SELECT * FROM admins WHERE username = $1 AND password = $2',
     [username, password],
@@ -115,7 +127,7 @@ const verifyToken = (token) => {
       if (decoded.role !== 'admin') {
         return reject(false);
       }
-      
+
       return resolve(true);
     });
   });
@@ -128,7 +140,7 @@ const auth = async (req, res, next) => {
   }
   try {
     const isValid = await verifyToken(token);
-    
+
     if (isValid) {
       req.token = jwt_decode(token);
       next();
@@ -160,7 +172,6 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
-
 app.get('/api/admin/verify', auth, (req, res) => {
   res.status(200).send({ isValid: true });
 });
@@ -183,7 +194,7 @@ app.get('/api/admin/list', auth, async (req, res) => {
   res.send(rows);
 });
 
-app.post('/api/session', async (req, res) => {
+app.post('/api/session', csrfProtection, async (req, res) => {
   const id = uuid.v4();
   const { rows } = await pool.query(
     'SELECT adminid FROM admins ORDER BY RANDOM() LIMIT 1'
@@ -198,29 +209,33 @@ app.post('/api/session', async (req, res) => {
   res.send({ sessionId: id });
 });
 
-app.post('/api/user/message', optionalAuth, upload.single('file'), async (req, res) => {
-  const sessionId = req.headers.sessionid;
-  const message = req.headers["x-message-content"];
+app.post(
+  '/api/user/message',
+  optionalAuth,
+  upload.single('file'),
+  async (req, res) => {
+    const sessionId = req.headers.sessionid;
+    const message = req.headers['x-message-content'];
 
+    let userType = 'user';
 
-  let userType = 'user';
+    const token = req.token;
+    if (token) {
+      const adminUsername = token.username;
+      userType = 'admin';
+    }
 
-  const token = req.token;
-  if (token) {
-    const adminUsername = token.username;
-    userType = 'admin';
+    console.log(`Message from ${userType} on session: ${sessionId}`);
+    const filename = req.file ? req.file.filename : null;
+    const originalFilename = req.file ? req.file.originalname : null;
+    const fileType = req.file ? req.file.mimetype : null;
+    await pool.query(
+      'INSERT INTO user_messages (sender, message, session, filename, original_filename, file_type) VALUES ($1, $2, $3, $4, $5, $6)',
+      [userType, message, sessionId, filename, originalFilename, fileType]
+    );
+    res.sendStatus(200);
   }
-
-  console.log(`Message from ${userType} on session: ${sessionId}`);
-  const filename = req.file ? req.file.filename : null;
-  const originalFilename = req.file ? req.file.originalname : null;
-  const fileType = req.file ? req.file.mimetype : null;
-  await pool.query(
-    'INSERT INTO user_messages (sender, message, session, filename, original_filename, file_type) VALUES ($1, $2, $3, $4, $5, $6)',
-    [userType, message, sessionId, filename, originalFilename, fileType]
-  );
-  res.sendStatus(200);
-});
+);
 
 app.get('/api/user/file/:fileid', optionalAuth, async (req, res) => {
   const fileId = req.params.fileid;
@@ -307,26 +322,30 @@ app.patch('/api/user/update', auth, async (req, res) => {
   }
 });
 
+app.post(
+  '/api/admin/message/:adminId',
+  auth,
+  upload.single('file'),
+  async (req, res) => {
+    try {
+      const recipientId = req.params.adminId;
+      const senderId = req.token.adminId;
+      const message = req.headers['x-message-content'];
 
-app.post('/api/admin/message/:adminId', auth, upload.single('file'), async (req, res) => {
-  try {
-    const recipientId = req.params.adminId;
-    const senderId = req.token.adminId;
-    const message = req.headers["x-message-content"];
-
-    const filename = req.file ? req.file.filename : null;
-    const original_filename = req.file ? req.file.originalname : null;
-    const file_type = req.file ? req.file.mimetype : null;
-    await pool.query(
-      'INSERT INTO admin_messages (sender, recipient, message, filename, original_filename, file_type) VALUES ($1, $2, $3, $4, $5, $6)',
-      [senderId, recipientId, message, filename, original_filename, file_type]
-    );
-    res.sendStatus(200);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Internal server error');
+      const filename = req.file ? req.file.filename : null;
+      const original_filename = req.file ? req.file.originalname : null;
+      const file_type = req.file ? req.file.mimetype : null;
+      await pool.query(
+        'INSERT INTO admin_messages (sender, recipient, message, filename, original_filename, file_type) VALUES ($1, $2, $3, $4, $5, $6)',
+        [senderId, recipientId, message, filename, original_filename, file_type]
+      );
+      res.sendStatus(200);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Internal server error');
+    }
   }
-});
+);
 
 app.get('/api/admin/file/:fileid', auth, async (req, res) => {
   const fileId = req.params.fileid;
@@ -355,14 +374,16 @@ app.get('/api/admin/file/:fileid', auth, async (req, res) => {
         }
       });
     } else {
-      return res.status(403).send({ message: 'Forbidden'});
+      return res.status(403).send({ message: 'Forbidden' });
     }
   } catch (error) {
     console.error(error);
     res.status(500).send('Internal server error');
   }
 });
-
+app.get('/api/csrf-token', (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
 app.get('/api/admin/messages/:adminId', auth, async (req, res) => {
   const recipientId = req.params.adminId;
   try {
@@ -396,5 +417,5 @@ app.get('/api/admin/messages/:adminId', auth, async (req, res) => {
     res.status(500).send('Internal server error');
   }
 });
-
+app.get('/', (req, res) => {});
 app.listen(3100);

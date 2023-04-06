@@ -14,10 +14,27 @@ import CookiePrivacy from './pages/privacy/cookie-privacy';
 
 import Cookies from 'js-cookie';
 import AdminChat from './pages/admin/admin-chat';
+import { API_URL } from './config/default';
 
 function App() {
   const [showBanner, setShowBanner] = useState(false);
+  const [csrfToken, setCsrfToken] = useState(null);
+  useEffect(() => {
+    async function fetchCsrfToken() {
+      try {
+        const response: any = await fetch(`${API_URL}/api/csrf-token`);
 
+        const data = await response.json();
+        setCsrfToken(data.csrfToken);
+        Cookies.set('XSRF-TOKEN', data.csrfToken); // Store the CSRF token as a cookie
+      } catch (error: any) {
+        console.log(error.message);
+        console.error('Error fetching CSRF token:', error.message);
+      }
+    }
+
+    fetchCsrfToken();
+  }, []);
   useEffect(() => {
     const hasAllowedCookies = Cookies.get('allowCookies') === 'true';
     if (!hasAllowedCookies) {

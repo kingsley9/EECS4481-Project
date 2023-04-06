@@ -4,11 +4,14 @@ import { setCookie, getCookie } from '../../utils/cookie';
 import { API_URL } from '../../config/default';
 import axios from 'axios';
 import './home.css';
+import Cookies from 'js-cookie';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComments, faUserTie } from '@fortawesome/free-solid-svg-icons';
 
 const Home = () => {
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const sessionCookie = getCookie('session');
 
@@ -18,11 +21,18 @@ const Home = () => {
     } else {
       setLoading(true);
       try {
-        const response = await axios.post(`${API_URL}/api/session`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const csrfToken = Cookies.get('XSRF-TOKEN'); // Read the XSRF-TOKEN from the user's browser using js-cookie
+
+        const response = await axios.post(
+          `${API_URL}/api/session`,
+          {},
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': csrfToken,
+            },
+          }
+        );
         const data = response.data;
         setCookie('session', data.sessionId);
         setLoading(false);
