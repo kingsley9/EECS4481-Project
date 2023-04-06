@@ -70,9 +70,20 @@ const AdminChat = () => {
     <div style={{ margin: 'auto' }}>
       <h1>Admin Dashboard</h1>
       <p>{adminMessage}</p>
-      <button className="logout-button " onClick={handleLogout}>
-        Logout
-      </button>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+        }}
+      >
+        <button className="logout-button" onClick={handleLogout}>
+          Logout
+        </button>
+        <button className="admin-chat-button " onClick={handleAdminDashboard}>
+          Admin Dashboard
+        </button>
+      </div>
       <div className="admin-dashboard">
         <div className="admin-panel">
           <h2 style={{ margin: '15px' }}>Conversations</h2>
@@ -96,9 +107,6 @@ const AdminChat = () => {
           )}
         </div>
       </div>
-      <button className="admin-chat-button " onClick={handleAdminDashboard}>
-        Admin Dashboard
-      </button>
     </div>
   );
 };
