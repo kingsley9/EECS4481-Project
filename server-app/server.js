@@ -81,28 +81,33 @@ const sessions = new Map();
 const secret = process.env.JWT_SECRET;
 
 app.post('/api/admin/login', (req, res) => {
-  const { username, password } = req.body;
-  
-  pool.query(
-    'SELECT * FROM admins WHERE username = $1 AND password = $2',
-    [username, password],
-    (error, results) => {
-      if (error) {
-        console.error(error);
-        res.status(500).send('Internal server error');
-      } else if (results.rows.length > 0) {
-        const admin = {
-          username: username,
-          adminId: results.rows[0].adminid,
-          role: 'admin',
-        };
-        const token = jwt.sign(admin, secret, { expiresIn: '1h' });
-        res.status(200).send({ token });
-      } else {
-        res.status(401).send('Invalid username or password');
+  try {
+    const { username, password } = req.body;
+    pool.query(
+      'SELECT * FROM admins WHERE username = $1 AND password = $2',
+      [username, password],
+      (error, results) => {
+        if (error) {
+          console.error(error);
+          res.status(500).send('Internal server error');
+        } else if (results.rows.length > 0) {
+          const admin = {
+            username: username,
+            adminId: results.rows[0].adminid,
+            role: 'admin',
+          };
+          const token = jwt.sign(admin, secret, { expiresIn: '1h' });
+          res.status(200).send({ token });
+        } else {
+          res.status(401).send('Invalid username or password');
+        }
       }
-    }
-  );
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
+  
 });
 
 const verifyToken = (token) => {
@@ -160,22 +165,45 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
+app.get('/api/health', (req, res) => {
+  try {
+    res.status(200).send({ status: "OK" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
+});
 
 app.get('/api/admin/verify', auth, (req, res) => {
-  res.status(200).send({ isValid: true });
+  try {
+    res.status(200).send({ isValid: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.get('/api/admin', auth, (req, res) => {
-  res.status(200).send({ message: `Welcome ${req.token.username}` });
+  try {
+    res.status(200).send({ message: `Welcome ${req.token.username}` });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.get('/api/admin/sessions', auth, async (req, res) => {
-  const adminId = req.token.adminId;
-  const { rows } = await pool.query(
-    'SELECT id FROM sessions WHERE adminid = $1',
-    [adminId]
-  );
-  res.send(rows);
+  try {
+    const adminId = req.token.adminId;
+    const { rows } = await pool.query(
+      'SELECT id FROM sessions WHERE adminid = $1',
+      [adminId]
+    );
+    res.send(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 app.get('/api/admin/list', auth, async (req, res) => {
