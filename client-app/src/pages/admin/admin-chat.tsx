@@ -68,7 +68,7 @@ const AdminChat = () => {
 
   return (
     <div style={{ margin: 'auto' }}>
-      <h1>Admin Dashboard</h1>
+      <h1>Admin Chat</h1>
       <p>{adminMessage}</p>
       <div
         style={{
