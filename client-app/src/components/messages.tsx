@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import './Messages.css';
 import { Message } from '../data/message';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -11,9 +11,22 @@ interface Props {
 }
 
 const Messages: React.FC<Props> = ({ messages, role, onFileDownload }) => {
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   return (
     <div className="messages-container">
-      {messages.map((message: Message) => (
+      <div ref={messagesEndRef} />
+      {messages.slice(0).reverse().map((message: Message) => (
         <div
           className={`message ${role === message.sender ? 'sent' : 'received'}`}
           key={message.id}

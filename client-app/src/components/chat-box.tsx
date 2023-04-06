@@ -20,6 +20,11 @@ const ChatBox: React.FC<Props> = (props) => {
       setMessages(messages);
     };
     fetchMessages();
+    const interval = setInterval(() => {
+      fetchMessages();
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [props.sessionId]);
 
   const handleSend = async (text: string, file?: File) => {

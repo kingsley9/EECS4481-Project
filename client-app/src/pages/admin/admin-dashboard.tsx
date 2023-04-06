@@ -103,21 +103,7 @@ const AdminDashboard = () => {
       <button className="logout-button " onClick={handleLogout}>
         Logout
       </button>
-      <div className="admin-dashboard">
-        <div className="admin-panel">
-          <h2 style={{ margin: '15px' }}>Conversations</h2>
-          <ul>
-            {conversations.map((conversation) => (
-              <li
-                key={conversation.id}
-                onClick={() => handleConversationClick(conversation.id)}
-                className={sessionId === conversation.id ? 'selected' : ''}
-              >
-                {conversation.id}
-              </li>
-            ))}
-          </ul>
-          <div style={{ margin: '15px' }}>
+      <div style={{ margin: '15px' }}>
             <label htmlFor="admin-dropdown">Assign admin: </label>
             <select
               id="admin-dropdown"
@@ -132,6 +118,20 @@ const AdminDashboard = () => {
             </select>
             <button onClick={handleUpdateClick}>Update</button>
           </div>
+      <div className="admin-dashboard">
+        <div className="admin-panel">
+          <h2 style={{ margin: '15px' }}>Conversations</h2>
+          <ul>
+            {conversations.map((conversation) => (
+              <li
+                key={conversation.id}
+                onClick={() => handleConversationClick(conversation.id)}
+                className={sessionId === conversation.id ? 'selected' : ''}
+              >
+                {conversation.id}
+              </li>
+            ))}
+          </ul>
         </div>
         <div className="admin-content">
           {sessionId ? (

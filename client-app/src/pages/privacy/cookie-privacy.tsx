@@ -6,7 +6,7 @@ const CookiePrivacy = () => {
     <div className="cookie-privacy">
       <h1 style={{ textAlign: 'center' }}>Cookie Policy</h1>
       <p>
-        Last updated: May 25, 2022
+        Last updated: Apr 03, 2023
       </p>
       <p>
         Help Desk App and our third-party partners use cookies and similar technologies to enhance your web experience. This policy provides information about these technologies and your choices regarding their use. We obtain your consent for using these technologies by providing transparent notice and giving you the opportunity to disable them. To learn more about our privacy practices, please review our Privacy Policy.
