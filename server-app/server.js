@@ -37,7 +37,7 @@ const upload = multer({
 app.get('/', (req, res) => {});
 app.use(
   cors({
-    origin: ['*'],
+    origin: ['http://localhost:3000', 'https://34.107.199.71', 'http://34.96.85.15'],
     credentials: true,
     methods: ['GET', 'POST', 'PATCH'],
     allowedHeaders: [
