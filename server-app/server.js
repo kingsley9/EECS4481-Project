@@ -37,7 +37,7 @@ const upload = multer({
 app.get('/', (req, res) => {});
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'https://kingsley.github.io','http://35.232.92.79:3000'],
+    origin: ['http://localhost:3000', 'http://34.107.199.71'],
     credentials: true,
     methods: ['GET', 'POST', 'PATCH'],
     allowedHeaders: [
