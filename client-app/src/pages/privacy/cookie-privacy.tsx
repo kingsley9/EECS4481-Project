@@ -82,6 +82,21 @@ const CookiePrivacy = () => {
           </a>
         </li>
       </ul>
+      <h2>History</h2>
+      <p>
+        No current alerts. This section will be updated in case of any breaches
+        or security incidents.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        If you have any questions or concerns regarding our Cookie Policy or
+        Privacy Policy, please contact us at:
+      </p>
+      <p>
+        <strong>Email:</strong>{' '}
+        <a href="mailto:support@helpdeskapp.com">support@helpdeskapp.com</a>
+      </p>
     </div>
   );
 };
